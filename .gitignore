@@ -1,0 +1,8 @@
+# no .a or .o file
+*.[oa]
+
+# ignore all files in the ** directory
+
+# ignore kernel.bin
+kernel.bin
+
