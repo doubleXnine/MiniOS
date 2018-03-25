@@ -20,6 +20,8 @@ _NR_pthread     	equ 9 ;	//add by visual 2016.4.11
 _NR_udisp_int     	equ 10 ;	//add by visual 2016.5.16
 _NR_udisp_str     	equ 11 ;	//add by visual 2016.5.16
 _NR_exec     		equ 12 ;	//add by visual 2016.5.16
+_NR_yield			equ 13
+_NR_sleep			equ 14
 
 INT_VECTOR_SYS_CALL equ 0x90
 
@@ -28,15 +30,17 @@ global	get_ticks
 global	get_pid		;		//add by visual 2016.4.6
 global	kmalloc		;		//add by visual 2016.4.6
 global	kmalloc_4k	;		//add by visual 2016.4.7
-global	malloc	;			//add by visual 2016.4.7
+global	malloc		;		//add by visual 2016.4.7
 global	malloc_4k	;		//add by visual 2016.4.7
-global	free	;			//add by visual 2016.4.7
-global	free_4k	;			//add by visual 2016.4.7
-global	fork	;			//add by visual 2016.4.8
-global	pthread	;			//add by visual 2016.4.11
-global	udisp_int	;			//add by visual 2016.5.16
-global	udisp_str	;			//add by visual 2016.5.16
-global	exec	;			//add by visual 2016.5.16
+global	free		;		//add by visual 2016.4.7
+global	free_4k		;		//add by visual 2016.4.7
+global	fork		;		//add by visual 2016.4.8
+global	pthread		;		//add by visual 2016.4.11
+global	udisp_int	;		//add by visual 2016.5.16
+global	udisp_str	;		//add by visual 2016.5.16
+global	exec		;		//add by visual 2016.5.16
+global  yield
+global  sleep
 
 bits 32
 [section .text]
@@ -152,5 +156,23 @@ udisp_str:
 exec:
 	mov ebx,[esp+4]
 	mov	eax, _NR_exec
+	int	INT_VECTOR_SYS_CALL
+	ret
+
+; ====================================================================
+;                              yield
+; ====================================================================	
+yield:
+	mov ebx,[esp+4]
+	mov	eax, _NR_yield
+	int	INT_VECTOR_SYS_CALL
+	ret
+
+; ====================================================================
+;                              sleep
+; ====================================================================	
+sleep:
+	mov ebx,[esp+4]
+	mov	eax, _NR_sleep
 	int	INT_VECTOR_SYS_CALL
 	ret

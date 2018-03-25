@@ -112,6 +112,7 @@ PUBLIC int kernel_main()
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
+		p_proc->task.save_type = 1;
 		
 		/***************变量调整****************************/
 		p_proc++;
@@ -152,6 +153,7 @@ PUBLIC int kernel_main()
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
+		p_proc->task.save_type = 1;
 
 		/***************变量调整****************************/
 		p_proc++;
@@ -252,6 +254,7 @@ PUBLIC int kernel_main()
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
+		p_proc->task.save_type = 1;
 		
 		/***************变量调整****************************/
 		p_proc++;
@@ -291,6 +294,7 @@ PUBLIC int kernel_main()
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
+		p_proc->task.save_type = 1;
 		
 		/***************变量调整****************************/
 		p_proc++;
@@ -333,59 +337,61 @@ PUBLIC int kernel_main()
  *======================================================================*/
  void initial()
  {
-	/*int i=0x4000;
-	while (1) 
-	{
-		disp_str("I");
-		disp_int(i++);
-		disp_str(" ");
-		milli_delay(1);
-	}*/
+	//while(1);
 	exec("init/init.bin");
  }
  
 /*======================================================================*
                                TestA
  *======================================================================*/
-void TestA()				//edit by visual 2016.4.11
+void TestA()
 {
 	int i = 0x1000;
-/*
-	if( 0==fork() )
-	{//子进程
-		while (1) 
-		{
-			disp_int(get_pid());
-			disp_int(i++);
-			disp_str(" ");
-			milli_delay(1);
-		}
-	
-	}
-	else
-	{//父进程
-		while (1) 
-		{
-			disp_str("A");
-			disp_int(i++);
-			disp_str(" ");
-			milli_delay(1);
-		} 
-	}
-*/
-	//exec("init/init.bin");
 	while (1) 
 	{
-		disp_str("A");
-		disp_int(i++);
-		disp_str(" ");
+		disp_str("A( ");
+		disp_str("[");
+		disp_int(ticks);
+		disp_str("] ");
+		sleep(3);
+		//yield();
+		disp_str("[");
+		disp_int(ticks);
+		disp_str("] ");
+		disp_str(") ");
 		milli_delay(100);
 	} 
 }
 
-
 /*======================================================================*
                                TestB
+ *======================================================================*/
+void TestB()
+{
+	int i=0x2000;
+	while (1) 
+	{
+		disp_str("B ");
+		milli_delay(100);
+	}
+}
+
+
+/*======================================================================*
+                               TestC
+ *======================================================================*/
+void TestC()
+{
+	int i=0x3000;
+	while (1) 
+	{
+		disp_str("C ");
+		milli_delay(100);
+	}
+}
+
+/*======================================================================*
+                               pthread_Test
  *======================================================================*/
 void pthread_Test()//add by visual 2016.4.11
 {
@@ -396,56 +402,6 @@ void pthread_Test()//add by visual 2016.4.11
 		disp_int(*(int*)0x401FFC);
 		disp_str(" ");
 		milli_delay(10);
-	}
-}
-
-void TestB()		//edit by visual 2016.4.11
-{
-	int i=0x2000;
-	//(*(int*)0x401FFC) = 0x2000;
-	//pthread((void*)pthread_Test);
-/*	while(1){
-		disp_str("B");
-		(*(int*)0x401FFC)++;
-		disp_int(*(int*)0x401FFC);		
-		disp_str(" ");
-		milli_delay(10);
-	}*/
-	while (1) 
-	{
-		disp_str("B");
-		disp_int(i++);
-		disp_str(" ");
-		milli_delay(100);
-	}
-}
-
-
-/*======================================================================*
-                               TestC
- *======================================================================*/
-void TestC()		//edit by visual 2016.4.8
-{
-	/*int *i;
-	malloc(sizeof(int));//这个只是用来干扰的
-	i = (int*)malloc(sizeof(int));
-	*i = 0x3000;
-	while (1) {
-		disp_str("Ci=");
-		disp_int((int)i);
-		disp_str("*i=");
-		disp_int((*i)++);
-		disp_str(" ");
-		milli_delay(1);
-		//free_4k(i);
-	}*/
-	int i=0x3000;
-	while (1) 
-	{
-		disp_str("C");
-		disp_int(i++);
-		disp_str(" ");
-		milli_delay(100);
 	}
 }
 

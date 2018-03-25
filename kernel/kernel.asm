@@ -19,6 +19,8 @@ extern	delay
 extern	irq_table
 extern	page_fault_handler
 extern	disp_int
+extern  schedule
+extern  switch_pde
 
 ; 导入全局变量
 extern	gdt_ptr
@@ -29,6 +31,7 @@ extern	disp_pos
 extern	k_reenter
 extern	sys_call_table
 extern 	cr3_ready			;add by visual 2016.4.5
+extern  p_proc_current
 
 
 bits 32
@@ -46,6 +49,7 @@ global _start	; 导出 _start
 
 ;global restart
 global restart_int ;modified by xw, 17/12/11
+global save_context
 global sys_call
 global read_cr2   ;//add by visual 2016.5.9
 global refresh_page_cache ; // add by visual 2016.5.12
@@ -390,8 +394,9 @@ save_int:
         push    es      ;  | 保存原寄存器值
         push    fs      ;  |
         push    gs      ; /
-		mov		edx, [p_proc_current]				;xw
-		mov		dword [edx + ESP_SAVE_INT], esp	;xw save esp position in the kernel-stack of the process
+		mov		ebx,  [p_proc_current]			;xw
+		mov		dword [ebx + ESP_SAVE_INT], esp	;xw save esp position in the kernel-stack of the process
+		or		dword [ebx + SAVE_TYPE], 1		;set 1st-bit of save_type, added by xw, 17/12/04
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
@@ -399,33 +404,84 @@ save_int:
         mov     esi, esp                    
         inc     dword [k_reenter]                                   
 	    mov     esp, StackTop                                   
-		push    restart_int
+;	 	push    restart_int		;modified by xw, 17/12/04
+		push	judge
 	    jmp     [esi + RETADR - P_STACKBASE]                             
 
-save_syscall:			;can't use eax,ebx, for they will be used in sys_call
+save_syscall:			;can't modify EAX, for it contains syscall number
+						;can't modify EBX, for it contains the syscall argument
         pushad          ; `.
         push    ds      ;  |
         push    es      ;  | 保存原寄存器值
         push    fs      ;  |
         push    gs      ; /
-		mov		edx, [p_proc_current]					;xw
+		mov		edx,  [p_proc_current]				;xw
 		mov		dword [edx + ESP_SAVE_SYSCALL], esp	;xw save esp position in the kernel-stack of the process
+		or		dword [edx + SAVE_TYPE], 4			;set 3rd-bit of save_type, added by xw, 17/12/04
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
 
         mov     esi, esp                    
         inc     dword [k_reenter]                        
-	    push    restart_syscall                  
+;	    push    restart_syscall		;modified by xw, 17/12/04
+		push	judge
 	    jmp     [esi + RETADR - P_STACKBASE]
 ;modified end
 
+save_context:			;called by C function, so can't modify ebx, edi, esi
+		cli
+		
+		pushfd			; `.
+		pushad          ;  | 
+        push    ds      ;  |
+        push    es      ;  | 保存原寄存器值
+        push    fs      ;  |
+        push    gs      ; /
+		mov		edx,  [p_proc_current]				;xw
+		mov		dword [edx + ESP_SAVE_CONTEXT], esp	;xw save esp position in the kernel-stack of the process
+		or		dword [edx + SAVE_TYPE], 2			;set 2nd-bit of save_type 			
+                  
+        inc     dword [k_reenter]	;regard giving up CPU as reenter    
+		
+	    push	eax	;caller-save resgisters when call a C function
+		push	ecx
+		push	edx
+		call	schedule
+		call	switch_pde
+		pop		edx
+		pop		ecx
+		pop		eax
+		
+		push 	eax									; 	┓
+		mov 	eax,[cr3_ready]						; 	┣改变cr3
+		mov 	cr3,eax								;	┃
+		pop 	eax									; 	┛
+		
+		jmp		judge
+
+; ====================================================================================
+;                                 judge
+; ====================================================================================
+;added by xw, 18/03/24
+;added begin
+judge:
+		mov		eax, [p_proc_current]			;get save_type
+		mov		ebx, [eax + SAVE_TYPE]
+		test	ebx, 1
+		jnz		restart_int
+		test	ebx, 2
+		jnz		restart_context
+		test	ebx, 4
+		jnz		restart_syscall
+;added end
 
 ; ====================================================================================
 ;                                 sys_call
 ; ====================================================================================
 sys_call:
-        ;call    save
+        ;get syscall number from eax
+		;syscall that's called gets its argument from pushed ebx
 		call	save_syscall	;modified by xw, 17/12/11
 
         sti
@@ -451,30 +507,54 @@ sys_call:
 ;xw		lea	eax, [esp + P_STACKTOP]
 ;xw		mov	dword [tss + TSS3_S_SP0], eax
 	
-restart_int:
-	mov	esp, [p_proc_current]
+restart_int:								;called by C function, so can't modify ebx, edi, esi
+	mov		eax, [p_proc_current]				;get save_type
+	mov		edx, [eax + SAVE_TYPE]
+	sub 	edx, 1							
+	mov		dword [eax + SAVE_TYPE], edx	;clear 1st-bit of save_type
+	mov		esp, [p_proc_current]
 	lldt	[esp + P_LDT_SEL]
-	lea	eax, [esp + INIT_STACK_SIZE]	;xw
-	mov	dword [tss + TSS3_S_SP0], eax
-	mov esp, [esp + ESP_SAVE_INT]	;xw	restore esp position
-	jmp restart_restore
+	lea		eax, [esp + INIT_STACK_SIZE]
+	mov		dword [tss + TSS3_S_SP0], eax
+	mov 	esp, [esp + ESP_SAVE_INT]		;restore esp position
+	jmp 	restart_restore
 
-restart_syscall:
-	mov	esp, [p_proc_current]
+restart_syscall:							;ebx gets its value from judge
+	sub 	ebx, 4
+	mov		dword [eax + SAVE_TYPE], ebx	;clear 3rd-bit of save_type
+	mov		esp, [p_proc_current]
+	mov 	esp, [esp + ESP_SAVE_SYSCALL]	;xw	restore esp position
+	jmp 	restart_restore
+
+restart_context:							;ebx gets its value from judge
+	sub 	ebx, 2							;added by xw, 17/12/04
+	mov		dword [eax + SAVE_TYPE], ebx	;clear 2nd-bit of save_type
+	mov		esp, [p_proc_current]
 	lldt	[esp + P_LDT_SEL]
-	lea	eax, [esp + INIT_STACK_SIZE]	;xw
-	mov	dword [tss + TSS3_S_SP0], eax
-	mov esp, [esp + ESP_SAVE_SYSCALL]	;xw	restore esp position
+	lea		eax, [esp + INIT_STACK_SIZE]	;xw
+	mov		dword [tss + TSS3_S_SP0], eax	;set sp0, when entering kernel space from user space
+											;esp gets value from sp0 where kernel stack is empty
+	mov 	esp, [esp + ESP_SAVE_CONTEXT]	;xw	restore esp position
+	
+	dec 	dword [k_reenter]
+	pop		gs
+	pop		fs
+	pop		es
+	pop		ds
+	popad
+	popfd
+	sti
+	ret
 
 ;xw	restart_reenter:
-restart_restore:	;xw
-	dec	dword [k_reenter]
-	pop	gs
-	pop	fs
-	pop	es
-	pop	ds
+restart_restore:
+	dec		dword [k_reenter]
+	pop		gs
+	pop		fs
+	pop		es
+	pop		ds
 	popad
-	add	esp, 4
+	add		esp, 4
 	iretd
 ;modified end
 

@@ -19,9 +19,10 @@ PUBLIC u32	seg2phys(u16 seg);
 PUBLIC void	delay(int time);
 
 /* kernel.asm */
-void restart();
-u32 read_cr2();			//add by visual 2016.5.9
-void refresh_page_cache();//add by visual 2016.5.12
+void restart_int();
+void save_context();
+u32  read_cr2();			//add by visual 2016.5.9
+void refresh_page_cache();  //add by visual 2016.5.12
 
 /* main.c */
 void TestA();
@@ -40,9 +41,9 @@ PUBLIC void clock_handler(int irq);
 * 以下是系统调用相关函数的声明	
 ****************************************************************/
 /* syscall.asm */
-PUBLIC  void    sys_call();             /* int_handler */
-PUBLIC  int     get_ticks();
-PUBLIC int get_pid();					//add by visual 2016.4.6
+PUBLIC void  sys_call();                /* int_handler */
+PUBLIC int   get_ticks();
+PUBLIC int   get_pid();					//add by visual 2016.4.6
 PUBLIC void* kmalloc(int size);			//edit by visual 2016.5.9
 PUBLIC void* kmalloc_4k();				//edit by visual 2016.5.9
 PUBLIC void* malloc(int size);			//edit by visual 2016.5.9
@@ -54,10 +55,12 @@ PUBLIC int pthread(void *arg);			//add by visual 2016.4.11
 PUBLIC void udisp_int(int arg);		//add by visual 2016.5.16
 PUBLIC void udisp_str(char* arg);	//add by visual 2016.5.16
 PUBLIC u32 exec(char* path);		//add by visual 2016.5.16
+PUBLIC void yield();
+PUBLIC void sleep(int n);
 
 /* syscallc.c */		//edit by visual 2016.4.6
-PUBLIC int     sys_get_ticks();        /* sys_call */
-PUBLIC int sys_get_pid();				//add by visual 2016.4.6
+PUBLIC int   sys_get_ticks();           /* sys_call */
+PUBLIC int   sys_get_pid();				//add by visual 2016.4.6
 PUBLIC void* sys_kmalloc(int size);			//edit by visual 2016.5.9
 PUBLIC void* sys_kmalloc_4k();				//edit by visual 2016.5.9
 PUBLIC void* sys_malloc(int size);			//edit by visual 2016.5.9
@@ -67,6 +70,9 @@ PUBLIC int sys_free_4k(void* AdddrLin);		//edit by visual 2016.5.9
 PUBLIC int sys_pthread(void *arg);		//add by visual 2016.4.11
 PUBLIC void sys_udisp_int(int arg);		//add by visual 2016.5.16
 PUBLIC void sys_udisp_str(char* arg);		//add by visual 2016.5.16
+PUBLIC void sys_yield();
+PUBLIC void sys_sleep(int n);
+PUBLIC void sys_wakeup(void *channel);
 
 /*exec.c*/
 PUBLIC u32 sys_exec(char* path);		//add by visual 2016.5.23

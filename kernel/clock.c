@@ -21,6 +21,7 @@ PUBLIC void clock_handler(int irq)
 {
 	ticks++;
 	p_proc_current->task.ticks--;
+	sys_wakeup(&ticks);
 
 	//to make syscall reenter, deleted by xw, 17/12/11
 	/*

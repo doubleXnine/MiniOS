@@ -76,3 +76,41 @@ PUBLIC void free_PCB(PROCESS *p)
 {//释放PCB表
 	p->task.stat=IDLE;
 }
+
+/*======================================================================*
+                           yield and sleep
+ *======================================================================*/
+//used for processes to give up the CPU
+PUBLIC void sys_yield()
+{
+	p_proc_current->task.ticks--;
+	save_context();
+}
+
+//used for processes to sleep for n ticks
+PUBLIC void sys_sleep(int n)
+{
+	int ticks0;
+	
+	ticks0 = ticks;
+	
+	while(ticks - ticks0 < n){
+		p_proc_current->task.channel = &ticks;
+		p_proc_current->task.stat = SLEEPING;
+		save_context();
+	}
+}
+
+/*invoked by clock-interrupt handler to wakeup 
+ *processes sleeping on ticks.
+ */
+PUBLIC void sys_wakeup(void *channel)
+{
+	PROCESS *p;
+	
+	for(p = proc_table; p < proc_table + NR_PCBS; p++){
+		if(p->task.stat == SLEEPING && p->task.channel == channel){
+			p->task.stat = READY;
+		}
+	}
+}
