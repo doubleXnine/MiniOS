@@ -20,14 +20,14 @@ EXTERN	u8		idt_ptr[6];	// 0~15:Limit  16~47:Base
 EXTERN	GATE		idt[IDT_SIZE];
 
 EXTERN	u32		k_reenter;
-EXTERN int u_proc_sum; 		//内核中用户进程/线程数量 add by visual 2016.5.25
+EXTERN  int     u_proc_sum; 		//内核中用户进程/线程数量 add by visual 2016.5.25
 
 EXTERN	TSS		tss;
 EXTERN	PROCESS*	p_proc_current;
 
 extern	PROCESS		proc_table[];
 extern	char		task_stack[];
-extern  TASK            task_table[];
+extern  TASK        task_table[];
 extern	irq_handler	irq_table[];
 
 

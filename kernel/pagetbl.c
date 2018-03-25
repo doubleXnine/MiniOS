@@ -11,6 +11,14 @@
 #include "proc.h"
 #include "global.h"
 
+/*======================================================================*
+                           switch_pde
+ *switch the page directory table after schedule() is called
+ *======================================================================*/
+PUBLIC	void switch_pde()
+{
+	cr3_ready = p_proc_current->task.cr3;
+}
 
 /*======================================================================*
                            init_page_pte		add by visual 2016.4.19

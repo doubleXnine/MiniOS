@@ -77,8 +77,8 @@ void main(int arg,char *argv[])
 {
 	int i=0;
 	
-	//pthread(pthread_test1);
-	fork();
+	pthread(pthread_test1);
+	//fork();
 	while(1)
 	{
 		udisp_str("init");

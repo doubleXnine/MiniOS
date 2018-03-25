@@ -39,7 +39,8 @@
 #define NR_K_PCBS 10		//add by visual 2016.4.5
 
 
-enum proc_stat	{IDLE,READY,WAITING,RUNNING};		//add by visual smile 2016.4.5
+//enum proc_stat	{IDLE,READY,WAITING,RUNNING};		//add by visual smile 2016.4.5
+enum proc_stat	{IDLE,READY,SLEEPING};		  //eliminate RUNNING state
 #define NR_CHILD_MAX (NR_PCBS-NR_K_PCBS-1)    //定义最多子进程/线程数量	//add by visual 2016.5.26
 #define TYPE_PROCESS	0//进程//add by visual 2016.5.26
 #define TYPE_THREAD		1//线程//add by visual 2016.5.26
@@ -103,7 +104,14 @@ typedef struct s_proc {
 	
 	char* esp_save_int;		//to save the position of esp in the kernel stack of the process
 							//added by xw, 17/12/11
-	char* esp_save_syscall;	//same above
+	char* esp_save_syscall;	//to save the position of esp in the kernel stack of the process
+	char* esp_save_context;	//to save the position of esp in the kernel stack of the process
+	int   save_type;		//the cause of process losting CPU
+							//1st-bit for interruption, 2nd-bit for context, 3rd-bit for syscall
+	void* channel;			/*if non-zero, sleeping on channel, which is a pointer of the target field
+							for example, as for syscall sleep(int n), the target field is 'ticks',
+							and the channel is a pointer of 'ticks'.
+							*/
 
 	LIN_MEMMAP	memmap;			//线性内存分部信息 		add by visual 2016.5.4
 	TREE_INFO info;				//记录进程树关系	add by visual 2016.5.25

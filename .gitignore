@@ -3,6 +3,6 @@
 
 # ignore all files in the ** directory
 
-# ignore kernel.bin
-kernel.bin
+# ignore *.bin
+*.bin
 

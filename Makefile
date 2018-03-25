@@ -51,7 +51,8 @@ everything : $(ORANGESBOOT) $(ORANGESKERNEL) $(ORANGESINIT)
 
 all : realclean everything
 
-image : realclean everything clean buildimg
+# image : realclean everything clean buildimg
+image : everything buildimg
 
 clean :
 	rm -f $(OBJS) $(OBJSINIT)
