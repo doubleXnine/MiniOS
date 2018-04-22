@@ -1,4 +1,49 @@
 ********************************************************************
+MiniOS v1.1  Date:18/4/21
+
+********
+Description:
+--Interrupt handling and processes' giving up CPU voluntarily
+  can work together in a better way now.
+
+********
+Features added:
+--At MiniOS v1.0, we add a context in processes' kerne stack to
+  support giving up CPU voluntarily. And at this version, 
+  we extend this feature to interrupt handling, which the context struct
+  will also be used in.
+--sched()
+  The sched() function is written in asm and existing in kernel.asm.
+  It's the entry point of process switching. As we mentioned before, 
+  interrupt handling and processes' giving up CPU can work together,
+  in fact, it's implemented by both invoking sched().
+  What sched() does can simply be described as saving current process's 
+  context, invoking schedule(), renewing the new chosen process' executing
+  environment and then, switching to the new process's kernel stack 
+  and restoring it's context.
+  sched() can be invoked only in kernel space, and naturally it always 
+  returns back to kernel space.
+--schedule()
+  The schedule() function is written in C and existing in proc.c.
+  It's the actually scheduler and determines which process will luckily
+  get the CPU.
+--With some modification of affectded code, the new procedure of 
+  process switching can work with other parts correctly.
+  You can use fork() and pthread() normally, and Kernel Preemption is
+  still there.
+
+********
+Bugs fixed:
+--With a modification of processes's initial ticks, the first process in
+  the the proc_table outputs first as we want.
+  Before the modification, each process only has 1 ticks in hand, and when our
+  first process begin running, a clock-interruption will happen immediately.
+  Then the second process in proc_table will be chosen and enjoy outputing
+  first.
+--k_reenter is used to handle interrupt nesting now, its value is increased
+  only when an interrupt happens.
+
+********************************************************************
 MiniOS v1.0  Date:18/3/18
 
 ********
@@ -51,7 +96,8 @@ OS-development project, and Lei Tao(visual), the author of 21pthread based on Or
 -It's assumed that you use a "x86_64" Linux, or you should rename the "Makefile.i386"
 to "Makefile" before you run "make image".
 -Now the os allows syscall to re-enter, in other words, you needn't wait a syscall ending
-before you can run another.
+before you can run another. It's also called Kernel Preemption, in contrast to 
+User Preemption.
 -However, syscall fork and pthread can't work normally now.
 
 

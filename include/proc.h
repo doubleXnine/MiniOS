@@ -5,10 +5,13 @@
                                                     Forrest Yu, 2005
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-/* used to locate saved registers in the new kernel stack.
- * note that you shouldn't use saved registers in the old
+/* Used to find saved registers in the new kernel stack,
+ * for there is no variable name you can use in C.
+ * The macro defined below must coordinate with the equivalent in sconst.inc, 
+ * whose content is used in asm.
+ * Note that you shouldn't use saved registers in the old
  * kernel stack, i.e. STACK_FRAME, any more.
- * to access them, use a pointer plus a offset defined 
+ * To access them, use a pointer plus a offset defined 
  * below instead.
  * added by xw, 17/12/11
  */
@@ -106,7 +109,7 @@ typedef struct s_proc {
 							//added by xw, 17/12/11
 	char* esp_save_syscall;	//to save the position of esp in the kernel stack of the process
 	char* esp_save_context;	//to save the position of esp in the kernel stack of the process
-	int   save_type;		//the cause of process losting CPU
+//	int   save_type;		//the cause of process losting CPU	//save_type is not needed any more, xw, 18/4/20
 							//1st-bit for interruption, 2nd-bit for context, 3rd-bit for syscall
 	void* channel;			/*if non-zero, sleeping on channel, which is a pointer of the target field
 							for example, as for syscall sleep(int n), the target field is 'ticks',

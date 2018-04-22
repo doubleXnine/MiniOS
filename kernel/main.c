@@ -29,6 +29,7 @@ PUBLIC int kernel_main()
 	PROCESS*	p_proc		= proc_table;
 	u16		selector_ldt	= SELECTOR_LDT_FIRST;	
 	char* p_regs;	//point to registers in the new kernel stack, added by xw, 17/12/11
+	task_f eip_context;	//a funtion pointer, added by xw, 18/4/18
 	/*************************************************************************
 	*进程初始化部分 	edit by visual 2016.5.4 
 	***************************************************************************/
@@ -104,15 +105,22 @@ PUBLIC int kernel_main()
 								
 		}
 		
-		/***************copy registers data****************************/
+		/***************copy registers data to kernel stack****************************/
 		//copy registers data to the bottom of the new kernel stack
 		//added by xw, 17/12/11
 		p_regs = (char*)(p_proc + 1);
 		p_regs -= P_STACKTOP;
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
+		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
-		p_proc->task.save_type = 1;
+		//p_proc->task.save_type = 1;
+		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+														//sched() will fetch value from esp_save_context
+		eip_context = restart_restore;
+		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
+														//start run. added by xw, 18/4/18
+		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
 		
 		/***************变量调整****************************/
 		p_proc++;
@@ -145,15 +153,22 @@ PUBLIC int kernel_main()
 		/****************页表、代码数据、堆栈*****************************/
 		//无
 		
-		/***************copy registers data****************************/
+		/***************copy registers data to kernel stack****************************/
 		//copy registers data to the bottom of the new kernel stack
 		//added by xw, 17/12/11
 		p_regs = (char*)(p_proc + 1);
 		p_regs -= P_STACKTOP;
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
+		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
-		p_proc->task.save_type = 1;
+		//p_proc->task.save_type = 1;
+		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+														//sched() will fetch value from esp_save_context
+		eip_context = restart_restore;
+		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
+														//start run. added by xw, 18/4/18
+		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
 
 		/***************变量调整****************************/
 		p_proc++;
@@ -246,15 +261,22 @@ PUBLIC int kernel_main()
 								
 		}
 		
-		/***************copy registers data****************************/
+		/***************copy registers data to kernel stack****************************/
 		//copy registers data to the bottom of the new kernel stack
 		//added by xw, 17/12/11
 		p_regs = (char*)(p_proc + 1);
 		p_regs -= P_STACKTOP;
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
+		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
-		p_proc->task.save_type = 1;
+		//p_proc->task.save_type = 1;
+		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+														//sched() will fetch value from esp_save_context
+		eip_context = restart_restore;
+		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
+														//start run. added by xw, 18/4/18
+		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
 		
 		/***************变量调整****************************/
 		p_proc++;
@@ -286,25 +308,39 @@ PUBLIC int kernel_main()
 		/****************页表、代码数据、堆栈*****************************/
 		//无
 		
-		/***************copy registers data****************************/
+		/***************copy registers data to kernel stack****************************/
 		//copy registers data to the bottom of the new kernel stack
 		//added by xw, 17/12/11
 		p_regs = (char*)(p_proc + 1);
 		p_regs -= P_STACKTOP;
 		memcpy(p_regs, (char*)p_proc, 18 * 4);
 		
+		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
-		p_proc->task.save_type = 1;
+		//p_proc->task.save_type = 1;
+		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+														//sched() will fetch value from esp_save_context
+		eip_context = restart_restore;
+		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
+														//start run. added by xw, 18/4/18
+		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
 		
 		/***************变量调整****************************/
 		p_proc++;
 		selector_ldt += 1 << 3;
-	}	
+	}
 	
-	proc_table[0].task.ticks = proc_table[0].task.priority = 1;		//edit by visual 2016.4.5
-	proc_table[1].task.ticks = proc_table[1].task.priority = 1;		//edit by visual 2016.4.5
-	proc_table[2].task.ticks = proc_table[2].task.priority = 1;		//edit by visual 2016.4.5
-	proc_table[NR_K_PCBS].task.ticks = proc_table[NR_K_PCBS].task.priority = 1;		//add by visual 2016.4.5
+	proc_table[0].task.ticks = proc_table[0].task.priority = 1;	
+	proc_table[1].task.ticks = proc_table[1].task.priority = 1;		
+	proc_table[2].task.ticks = proc_table[2].task.priority = 1;
+	proc_table[NR_K_PCBS].task.ticks = proc_table[NR_K_PCBS].task.priority = 1;
+	
+	/* When the first process begin running, a clock-interruption will happen immediately.
+	 * If the first process's initial ticks is 1, it won't be the first process to execute its
+	 * user code. Thus, it's will look weird, for proc_table[0] don't output first.
+	 * added by xw, 18/4/19
+	 */
+	proc_table[0].task.ticks = 2; 
 
 	/************************************************************************
 	*计时器部分初始化
@@ -327,7 +363,7 @@ PUBLIC int kernel_main()
 	**************************************************************************/
 	p_proc_current	= proc_table;
 	//restart();
-	restart_int();	//modified by xw, 17/12/11
+	restart_initial();	//modified by xw, 18/4/19
 	while(1){}
 }
 
@@ -337,7 +373,16 @@ PUBLIC int kernel_main()
  *======================================================================*/
  void initial()
  {
-	//while(1);
+	/*
+	int i;
+	while (1) 
+	{
+//		i=1000;
+		disp_str("I ");
+		milli_delay(100);
+//		while(--i){}
+	}
+	*/
 	exec("init/init.bin");
  }
  
@@ -346,20 +391,22 @@ PUBLIC int kernel_main()
  *======================================================================*/
 void TestA()
 {
-	int i = 0x1000;
+	int i;
 	while (1) 
 	{
+//		i=1000;
 		disp_str("A( ");
 		disp_str("[");
 		disp_int(ticks);
 		disp_str("] ");
-		sleep(3);
-		//yield();
+		sleep(5);
+//		yield();
 		disp_str("[");
 		disp_int(ticks);
 		disp_str("] ");
 		disp_str(") ");
 		milli_delay(100);
+//		while(--i){}
 	} 
 }
 
@@ -368,11 +415,19 @@ void TestA()
  *======================================================================*/
 void TestB()
 {
-	int i=0x2000;
+	int i, j;
 	while (1) 
 	{
 		disp_str("B ");
 		milli_delay(100);
+
+		/*
+		i = 2;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+		*/
 	}
 }
 
@@ -382,11 +437,13 @@ void TestB()
  *======================================================================*/
 void TestC()
 {
-	int i=0x3000;
+	int i;
 	while (1) 
 	{
+//		i=1000;
 		disp_str("C ");
 		milli_delay(100);
+//		while(--i){}
 	}
 }
 

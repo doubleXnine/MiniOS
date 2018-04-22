@@ -12,7 +12,7 @@
 #include "global.h"
 
 /*======================================================================*
-                           switch_pde
+                           switch_pde			added by xw, 17/12/11
  *switch the page directory table after schedule() is called
  *======================================================================*/
 PUBLIC	void switch_pde()

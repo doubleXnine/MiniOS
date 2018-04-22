@@ -41,15 +41,17 @@ clock_int_msg		db	"^", 0
 
 [SECTION .bss]
 StackSpace		resb	2 * 1024
-StackTop:		; 栈顶
+StackTop:		; top of the irq-stack
 
 [section .text]	; 代码在此
 
 global _start	; 导出 _start
 
 ;global restart
-global restart_int ;modified by xw, 17/12/11
-global save_context
+global restart_initial	;Added by xw, 18/4/21
+global restart_restore	;Added by xw, 18/4/21
+;global save_context
+global sched			;Added by xw, 18/4/21
 global sys_call
 global read_cr2   ;//add by visual 2016.5.9
 global refresh_page_cache ; // add by visual 2016.5.12
@@ -162,25 +164,29 @@ csinit:		; “这个跳转指令强制使用刚刚初始化的结构”——<<O
 ; 中断和异常 -- 硬件中断
 ; ---------------------------------
 %macro	hwint_master	1
-	;call	save
-	call	save_int		;modified by xw, 17/12/11
+	;call save
+	call save_int			;modified by xw, 17/12/11
+	inc  dword [k_reenter]  ;If k_reenter isn't equal to 0, there is no switching to the irq-stack, 
+							;which is performed in save_int. Added by xw, 18/4/21
+	
 	in	al, INT_M_CTLMASK	; `.
 	or	al, (1 << %1)		;  | 屏蔽当前中断
 	out	INT_M_CTLMASK, al	; /
-	mov	al, EOI			; `. 置EOI位
+	mov	al, EOI				; `. 置EOI位
 	out	INT_M_CTL, al		; /
-	sti	; CPU在响应中断的过程中会自动关中断，这句之后就允许响应新的中断
-	push	%1			; `.
-	call	[irq_table + 4 * %1]	;  | 中断处理程序
-	pop	ecx			; /
 	
-	push eax								; 	┓				add by visual 2016.4.5
-	mov eax,[cr3_ready]						; 	┣改变cr3
-	mov cr3,eax								;	┃
-	pop eax									; 	┛
-
+	sti						; CPU在响应中断的过程中会自动关中断，这句之后就允许响应新的中断
+	push %1						; `.
+	call [irq_table + 4 * %1]	;  | 中断处理程序
+	pop	ecx						; /
+	
+;	push eax								; 	┓				add by visual 2016.4.5
+;	mov eax,[cr3_ready]						; 	┣改变cr3
+;	mov cr3,eax								;	┃
+;	pop eax									; 	┛
 	
 	cli
+	dec dword [k_reenter]
 	in	al, INT_M_CTLMASK	; `.
 	and	al, ~(1 << %1)		;  | 恢复接受当前中断
 	out	INT_M_CTLMASK, al	; /
@@ -331,12 +337,10 @@ page_fault:
 	mov 	ecx,[esp + CSREG  - P_STACKBASE]; 把压入的cs放进ecx
 	mov 	edx,[esp + EFLAGSREG  - P_STACKBASE]; 把压入的eflags放进edx	
 	
-	inc     dword [k_reenter]           ;k_reenter++;
-	;cmp     dword [k_reenter], 0        ;if(k_reenter ==0)
-	;jne     .inkernel                     		; (k_reenter !=0)
-	
-	;mov	esp, StackTop			;deleted by xw, 17/12/11	
-	
+	;inc     dword [k_reenter]        ;k_reenter++;   ;k_reenter only counts if irq reenters, xw, 18/4/20
+	;cmp     dword [k_reenter], 0     ;if(k_reenter ==0)
+	;jne     .inkernel                ;(k_reenter !=0)	
+	;mov	esp, StackTop			  ;deleted by xw, 17/12/11		
 	;.inkernel:
 	push edx	;压入eflags
 	push ecx	;压入cs
@@ -394,19 +398,25 @@ save_int:
         push    es      ;  | 保存原寄存器值
         push    fs      ;  |
         push    gs      ; /
+		
+		cmp	    dword [k_reenter], 0			;Added by xw, 18/4/19
+		jnz		instack
+		
 		mov		ebx,  [p_proc_current]			;xw
 		mov		dword [ebx + ESP_SAVE_INT], esp	;xw save esp position in the kernel-stack of the process
-		or		dword [ebx + SAVE_TYPE], 1		;set 1st-bit of save_type, added by xw, 17/12/04
+;		or		dword [ebx + SAVE_TYPE], 1		;set 1st-bit of save_type, added by xw, 17/12/04
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
 
-        mov     esi, esp                    
-        inc     dword [k_reenter]                                   
-	    mov     esp, StackTop                                   
-;	 	push    restart_int		;modified by xw, 17/12/04
-		push	judge
-	    jmp     [esi + RETADR - P_STACKBASE]                             
+        mov     esi, esp  		                                        
+	    mov     esp, StackTop   ;switches to the irq-stack from current process's kernel stack 
+		push    restart_int		;added by xw, 18/4/19
+		jmp     [esi + RETADR - P_STACKBASE]
+instack:						;already in the irq-stack
+	 	push    restart_restore	;modified by xw, 18/4/19
+		jmp		[esp + RETADR - P_STACKBASE]
+                             
 
 save_syscall:			;can't modify EAX, for it contains syscall number
 						;can't modify EBX, for it contains the syscall argument
@@ -417,138 +427,126 @@ save_syscall:			;can't modify EAX, for it contains syscall number
         push    gs      ; /
 		mov		edx,  [p_proc_current]				;xw
 		mov		dword [edx + ESP_SAVE_SYSCALL], esp	;xw save esp position in the kernel-stack of the process
-		or		dword [edx + SAVE_TYPE], 4			;set 3rd-bit of save_type, added by xw, 17/12/04
+;		or		dword [edx + SAVE_TYPE], 4			;set 3rd-bit of save_type, added by xw, 17/12/04
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
 
         mov     esi, esp                    
-        inc     dword [k_reenter]                        
-;	    push    restart_syscall		;modified by xw, 17/12/04
-		push	judge
+;       inc     dword [k_reenter]                        
+	    push    restart_syscall		;modified by xw, 17/12/04
+;		push	judge
 	    jmp     [esi + RETADR - P_STACKBASE]
 ;modified end
 
-save_context:			;called by C function, so can't modify ebx, edi, esi
+; ====================================================================================
+;                                sched(process switch)
+; ====================================================================================
+sched:
+;could be called by C function, you must save ebp, ebx, edi, esi, 
+;for C function assumes that they stay unchanged. added by xw, 18/4/19
 		cli
+;save_context
+		pushfd	
+		push	ebp
+        push    ebx      
+        push    edi     
+        push    esi
+		mov		ebx,  [p_proc_current]				
+		mov		dword [ebx + ESP_SAVE_CONTEXT], esp	;save esp position in the kernel-stack of the process
+
+;schedule
+		call	schedule	;schedule is a C function, save eax, ecx, edx if you want them to stay unchanged.
+		call	renew_env	;renew process executing environment
 		
-		pushfd			; `.
-		pushad          ;  | 
-        push    ds      ;  |
-        push    es      ;  | 保存原寄存器值
-        push    fs      ;  |
-        push    gs      ; /
-		mov		edx,  [p_proc_current]				;xw
-		mov		dword [edx + ESP_SAVE_CONTEXT], esp	;xw save esp position in the kernel-stack of the process
-		or		dword [edx + SAVE_TYPE], 2			;set 2nd-bit of save_type 			
-                  
-        inc     dword [k_reenter]	;regard giving up CPU as reenter    
-		
-	    push	eax	;caller-save resgisters when call a C function
-		push	ecx
-		push	edx
-		call	schedule
-		call	switch_pde
-		pop		edx
-		pop		ecx
-		pop		eax
-		
-		push 	eax									; 	┓
-		mov 	eax,[cr3_ready]						; 	┣改变cr3
-		mov 	cr3,eax								;	┃
-		pop 	eax									; 	┛
-		
-		jmp		judge
+;restore_context
+		mov		ebx, [p_proc_current]
+		mov 	esp, [ebx + ESP_SAVE_CONTEXT]	;switch to a new kernel stack
+		pop		esi
+		pop		edi
+		pop		ebx
+		pop		ebp
+		popfd
+		sti
+		ret
+; ====================================================================================
+;                        			renew_env
+; ====================================================================================
+;renew process executing environment. Added by xw, 18/4/19
+renew_env:
+		call	switch_pde		;to change the global variable cr3_ready
+		mov 	eax,[cr3_ready]	;to switch the page directory table
+		mov 	cr3,eax
+
+		mov		eax, [p_proc_current]
+		lldt	[eax + P_LDT_SEL]				;load LDT
+		lea		ebx, [eax + INIT_STACK_SIZE]
+		mov		dword [tss + TSS3_S_SP0], ebx	;renew esp0
+		ret
 
 ; ====================================================================================
 ;                                 judge
 ; ====================================================================================
 ;added by xw, 18/03/24
 ;added begin
-judge:
-		mov		eax, [p_proc_current]			;get save_type
-		mov		ebx, [eax + SAVE_TYPE]
-		test	ebx, 1
-		jnz		restart_int
-		test	ebx, 2
-		jnz		restart_context
-		test	ebx, 4
-		jnz		restart_syscall
+;judge:
+;		mov		eax, [p_proc_current]			;get save_type
+;		mov		ebx, [eax + SAVE_TYPE]
+;		test	ebx, 1
+;		jnz		restart_int
+;		test	ebx, 2
+;		jnz		restart_context
+;		test	ebx, 4
+;		jnz		restart_syscall
 ;added end
 
 ; ====================================================================================
 ;                                 sys_call
 ; ====================================================================================
 sys_call:
-        ;get syscall number from eax
-		;syscall that's called gets its argument from pushed ebx
-		call	save_syscall	;modified by xw, 17/12/11
-
-        sti
-		push 	ebx							; 	┓	
-        call    [sys_call_table + eax * 4]	;	┣ 	将参数压入堆栈后再调用函数			add by visual 2016.4.6
-;		pop		ebx							; 	┛
-		add		esp, 4						;	clear the argument, modified by xw, 17/12/11
-        mov     [esi + EAXREG - P_STACKBASE], eax
-
-        cli
-
-        ret
-
+;get syscall number from eax
+;syscall that's called gets its argument from pushed ebx
+;so we can't modify eax and ebx in save_syscall
+	call	save_syscall	;modified by xw, 17/12/11
+	sti
+	push 	ebx							;push the argument the syscall need
+	call    [sys_call_table + eax * 4]	;将参数压入堆栈后再调用函数			add by visual 2016.4.6
+	add		esp, 4						;clear the argument in the stack, modified by xw, 17/12/11
+	mov		edx, [p_proc_current]				;\
+	mov 	esi, [edx + ESP_SAVE_SYSCALL]		; |the return value of C function is in EAX
+	mov     [esi + EAXREG - P_STACKBASE], eax	;/
+	cli
+	ret
 
 ; ====================================================================================
 ;				    restart
 ; ====================================================================================
-;modified by xw, 17/12/11
-;modified begin
+;modified by xw
 ;xw 	restart:
 ;xw		mov	esp, [p_proc_ready]
 ;xw		lldt	[esp + P_LDT_SEL]
 ;xw		lea	eax, [esp + P_STACKTOP]
 ;xw		mov	dword [tss + TSS3_S_SP0], eax
 	
-restart_int:								;called by C function, so can't modify ebx, edi, esi
-	mov		eax, [p_proc_current]				;get save_type
-	mov		edx, [eax + SAVE_TYPE]
-	sub 	edx, 1							
-	mov		dword [eax + SAVE_TYPE], edx	;clear 1st-bit of save_type
-	mov		esp, [p_proc_current]
-	lldt	[esp + P_LDT_SEL]
-	lea		eax, [esp + INIT_STACK_SIZE]
-	mov		dword [tss + TSS3_S_SP0], eax
-	mov 	esp, [esp + ESP_SAVE_INT]		;restore esp position
-	jmp 	restart_restore
+restart_int:
+	mov		eax, [p_proc_current]
+	mov 	esp, [eax + ESP_SAVE_INT]		;switch back to the kernel stack from the irq-stack	
+	call	sched							;save current process's context, invoke schedule(), and then
+											;switch to the chosen process's kernel stack and restore it's context
+											;Added by xw, 18/4/19
+;	call	renew_env
+	jmp     restart_restore
 
-restart_syscall:							;ebx gets its value from judge
-	sub 	ebx, 4
-	mov		dword [eax + SAVE_TYPE], ebx	;clear 3rd-bit of save_type
-	mov		esp, [p_proc_current]
-	mov 	esp, [esp + ESP_SAVE_SYSCALL]	;xw	restore esp position
+restart_syscall:
+;	sub 	ebx, 4							;ebx gets its value from judge
+;	mov		dword [eax + SAVE_TYPE], ebx	;clear 3rd-bit of save_type
+	mov		eax, [p_proc_current]
+	mov 	esp, [eax + ESP_SAVE_SYSCALL]	;xw	restore esp position
 	jmp 	restart_restore
-
-restart_context:							;ebx gets its value from judge
-	sub 	ebx, 2							;added by xw, 17/12/04
-	mov		dword [eax + SAVE_TYPE], ebx	;clear 2nd-bit of save_type
-	mov		esp, [p_proc_current]
-	lldt	[esp + P_LDT_SEL]
-	lea		eax, [esp + INIT_STACK_SIZE]	;xw
-	mov		dword [tss + TSS3_S_SP0], eax	;set sp0, when entering kernel space from user space
-											;esp gets value from sp0 where kernel stack is empty
-	mov 	esp, [esp + ESP_SAVE_CONTEXT]	;xw	restore esp position
-	
-	dec 	dword [k_reenter]
-	pop		gs
-	pop		fs
-	pop		es
-	pop		ds
-	popad
-	popfd
-	sti
-	ret
 
 ;xw	restart_reenter:
 restart_restore:
-	dec		dword [k_reenter]
+;	dec		dword [k_reenter]
 	pop		gs
 	pop		fs
 	pop		es
@@ -556,7 +554,23 @@ restart_restore:
 	popad
 	add		esp, 4
 	iretd
-;modified end
+	
+;restart_initial:							
+;	mov		esp, [p_proc_current]
+;	lldt	[esp + P_LDT_SEL]
+;	lea		eax, [esp + INIT_STACK_SIZE]
+;	mov		dword [tss + TSS3_S_SP0], eax
+;	mov 	esp, [esp + ESP_SAVE_INT]		;restore esp position
+;	jmp 	restart_restore
+restart_initial:							;Added by xw, 18/4/19
+;	mov		eax, [p_proc_current]
+;	lldt	[eax + P_LDT_SEL]
+;	lea		ebx, [eax + INIT_STACK_SIZE]
+;	mov		dword [tss + TSS3_S_SP0], ebx
+	call	renew_env						;renew process executing environment
+	mov		eax, [p_proc_current]
+	mov 	esp, [eax + ESP_SAVE_INT]		;restore esp position
+	jmp 	restart_restore
 
 ; ====================================================================================
 ;				    read_cr2			//add by visual 2016.5.9

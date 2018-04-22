@@ -70,9 +70,6 @@ void pthread_test1()
 	}
 }//*/
 
-
-
-
 void main(int arg,char *argv[])
 {
 	int i=0;

@@ -20,6 +20,11 @@ PUBLIC void schedule()
 {
 	PROCESS* p;
 	int	 greatest_ticks = 0;
+	
+	//Added by xw, 18/4/21
+	if (p_proc_current->task.stat == READY && p_proc_current->task.ticks > 0) {		
+		return;
+	}
 
 	while (!greatest_ticks) 
 	{
@@ -84,7 +89,8 @@ PUBLIC void free_PCB(PROCESS *p)
 PUBLIC void sys_yield()
 {
 	p_proc_current->task.ticks--;
-	save_context();
+//	save_context();
+	sched();	//Modified by xw, 18/4/19
 }
 
 //used for processes to sleep for n ticks
@@ -93,11 +99,12 @@ PUBLIC void sys_sleep(int n)
 	int ticks0;
 	
 	ticks0 = ticks;
+	p_proc_current->task.channel = &ticks;
 	
 	while(ticks - ticks0 < n){
-		p_proc_current->task.channel = &ticks;
 		p_proc_current->task.stat = SLEEPING;
-		save_context();
+//		save_context();
+		sched();	//Modified by xw, 18/4/19
 	}
 }
 

@@ -159,6 +159,8 @@ PRIVATE int fork_pcb_cpy(PROCESS* p_child)
 	int pid;
 	u32 eflags,selector_ldt,cr3_child;
 	char* p_reg;	//point to a register in the new kernel stack, added by xw, 17/12/11
+//	char* esp_save_int, esp_save_context;	//It's not what you want! damn it.
+	char *esp_save_int, *esp_save_context;	//use to save corresponding field in child's PCB.
 	
 	//暂存标识信息
 	pid = p_child->task.pid;
@@ -174,13 +176,23 @@ PRIVATE int fork_pcb_cpy(PROCESS* p_child)
 	//modified by xw, 17/12/11
 	//modified begin
 	//*p_child = *p_proc_current;
-	p_reg = p_child->task.esp_save_int;
+	
+	//esp_save_int and esp_save_context must be saved, because the child and the parent 
+	//use different kernel stack! And these two are importent to the child's initial running.
+	//Added by xw, 18/4/21
+	esp_save_int = p_child->task.esp_save_int;
+	esp_save_context = p_child->task.esp_save_context;
+//	disp_str("<");
+//	disp_int((int)(p_child->task.esp_save_context));
+//	disp_str("> ");
 	p_child->task = p_proc_current->task;
 	//note that syscalls can be interrupted now! the state of child can only be setted
 	//READY when anything else is well prepared. if an interruption happens right here,
 	//an error will still occur.
 	p_child->task.stat = IDLE;
-	p_child->task.esp_save_int = p_reg;	//esp_save_int of child must be restored!!
+	p_child->task.esp_save_int = esp_save_int;	//esp_save_int of child must be restored!!
+	p_child->task.esp_save_context = esp_save_context;	//same above
+//	p_child->task.esp_save_context = (char*)(p_child + 1) - P_STACKTOP - 4 * 6;	
 	memcpy(((char*)(p_child + 1) - P_STACKTOP), ((char*)(p_proc_current + 1) - P_STACKTOP), 18 * 4);
 	//modified end
 	

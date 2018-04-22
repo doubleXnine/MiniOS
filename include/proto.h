@@ -19,10 +19,13 @@ PUBLIC u32	seg2phys(u16 seg);
 PUBLIC void	delay(int time);
 
 /* kernel.asm */
-void restart_int();
-void save_context();
 u32  read_cr2();			//add by visual 2016.5.9
 void refresh_page_cache();  //add by visual 2016.5.12
+//void restart_int();
+//void save_context();
+void restart_initial();		//added by xw, 18/4/18
+void restart_restore();		//added by xw, 18/4/20
+void sched();				//added by xw, 18/4/18
 
 /* main.c */
 void TestA();
