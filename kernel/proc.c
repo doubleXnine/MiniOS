@@ -23,6 +23,7 @@ PUBLIC void schedule()
 	
 	//Added by xw, 18/4/21
 	if (p_proc_current->task.stat == READY && p_proc_current->task.ticks > 0) {		
+		p_proc_next = p_proc_current;	//added by xw, 18/4/26
 		return;
 	}
 
@@ -33,7 +34,8 @@ PUBLIC void schedule()
 			if (p->task.stat == READY && p->task.ticks > greatest_ticks)  //edit by visual 2016.4.5
 			{
 				greatest_ticks = p->task.ticks;
-				p_proc_current = p;
+//				p_proc_current = p;
+				p_proc_next	= p;	//modified by xw, 18/4/26
 			}
 
 		}
@@ -88,7 +90,8 @@ PUBLIC void free_PCB(PROCESS *p)
 //used for processes to give up the CPU
 PUBLIC void sys_yield()
 {
-	p_proc_current->task.ticks--;
+//	p_proc_current->task.ticks--;
+	p_proc_current->task.ticks = 0;	/* modified by xw, 18/4/27 */
 //	save_context();
 	sched();	//Modified by xw, 18/4/19
 }
@@ -121,3 +124,46 @@ PUBLIC void sys_wakeup(void *channel)
 		}
 	}
 }
+
+/* 
+ * This syscall needs long time to finish, so we can use it 
+ * to check if our os is kernel-preemptive.
+ * added by xw, 18/4/27
+ */
+PUBLIC void sys_print_E()
+{		
+	int i, j;
+	
+	disp_str("E( ");
+	
+	i = 100;
+	while(--i){
+		j = 1000;
+		while(--j){}
+	}
+	
+	disp_str(") ");
+}
+
+/* 
+ * This syscall needs long time to finish, so we can use it
+ * to check if our os is kernel-preemptive.
+ * added by xw, 18/4/27
+ */
+PUBLIC void sys_print_F()
+{
+	int i, j;
+	
+	disp_str("F( ");
+	
+	i = 100;
+	while(--i){
+		j = 1000;
+		while(--j){}
+	}
+	
+	disp_str(") ");
+}
+
+
+

@@ -35,7 +35,8 @@ ORANGESINIT	= init/init.bin
 OBJS		= kernel/kernel.o kernel/syscall.o kernel/start.o kernel/main.o kernel/clock.o\
 			kernel/i8259.o kernel/global.o kernel/protect.o kernel/proc.o\
 			lib/kliba.o lib/klib.o lib/string.o kernel/syscallc.o kernel/memman.o kernel/pagetbl.o	\
-			kernel/elf.o kernel/file.o kernel/exec.o kernel/fork.o kernel/pthread.o
+			kernel/elf.o kernel/file.o kernel/exec.o kernel/fork.o kernel/pthread.o \
+			kernel/ktest.o
 OBJSINIT	= init/init.o init/initstart.o lib/ulib.a 
 OBJSULIB = lib/string.o kernel/syscall.o
 DASMOUTPUT	= kernel.bin.asm
@@ -166,4 +167,7 @@ kernel/fork.o: kernel/fork.c /usr/include/stdc-predef.h include/type.h include/c
 	
 kernel/pthread.o: kernel/pthread.c /usr/include/stdc-predef.h include/type.h include/const.h include/protect.h \
 			include/proto.h include/string.h include/proc.h include/global.h
+	$(CC) $(CFLAGS) -o $@ $<
+kernel/ktest.o: kernel/ktest.c include/type.h include/const.h include/protect.h include/string.h include/proc.h \
+			include/proto.h include/global.h
 	$(CC) $(CFLAGS) -o $@ $<

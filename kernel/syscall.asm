@@ -20,8 +20,10 @@ _NR_pthread     	equ 9 ;	//add by visual 2016.4.11
 _NR_udisp_int     	equ 10 ;	//add by visual 2016.5.16
 _NR_udisp_str     	equ 11 ;	//add by visual 2016.5.16
 _NR_exec     		equ 12 ;	//add by visual 2016.5.16
-_NR_yield			equ 13
-_NR_sleep			equ 14
+_NR_yield			equ 13 ;	//added by xw, 17/12
+_NR_sleep			equ 14 ;	//added by xw, 17/12
+_NR_print_E			equ 15 ;	//added by xw, 18/4/27
+_NR_print_F			equ 16 ;	//added by xw, 18/4/27
 
 INT_VECTOR_SYS_CALL equ 0x90
 
@@ -41,6 +43,8 @@ global	udisp_str	;		//add by visual 2016.5.16
 global	exec		;		//add by visual 2016.5.16
 global  yield
 global  sleep
+global	print_E
+global	print_F
 
 bits 32
 [section .text]
@@ -174,5 +178,23 @@ yield:
 sleep:
 	mov ebx,[esp+4]
 	mov	eax, _NR_sleep
+	int	INT_VECTOR_SYS_CALL
+	ret
+
+; ====================================================================
+;                              print_E
+; ====================================================================	
+print_E:
+	mov ebx,[esp+4]
+	mov	eax, _NR_print_E
+	int	INT_VECTOR_SYS_CALL
+	ret
+
+; ====================================================================
+;                              print_F
+; ====================================================================	
+print_F:
+	mov ebx,[esp+4]
+	mov	eax, _NR_print_F
 	int	INT_VECTOR_SYS_CALL
 	ret

@@ -70,12 +70,16 @@ void pthread_test1()
 	}
 }//*/
 
+/*======================================================================*
+                          Syscall Pthread Test
+added by xw, 18/4/27
+ *======================================================================*/
+//	/*
 void main(int arg,char *argv[])
 {
 	int i=0;
 	
 	pthread(pthread_test1);
-	//fork();
 	while(1)
 	{
 		udisp_str("init");
@@ -86,3 +90,47 @@ void main(int arg,char *argv[])
 	}
 	return ;
 }
+//	*/
+
+/*======================================================================*
+                          Syscall Fork Test
+added by xw, 18/4/27
+ *======================================================================*/
+	/*
+void main(int arg,char *argv[])
+{
+	int i=0;
+	
+	fork();
+	while(1)
+	{
+		udisp_str("init");
+		udisp_int(++global);
+		udisp_str(" ");
+		i=10000;
+		while(--i){}
+	}
+	return ;
+}
+//	*/
+
+/*======================================================================*
+                           Syscall Exec Test
+added by xw, 18/4/27
+ *======================================================================*/
+	/*
+void main(int arg,char *argv[])
+{
+	int i=0;
+	
+	while(1)
+	{
+		udisp_str("init");
+		udisp_int(++global);
+		udisp_str(" ");
+		i=10000;
+		while(--i){}
+	}
+	return ;
+}
+//	*/

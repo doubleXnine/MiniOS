@@ -20,17 +20,6 @@ struct memfree *memarg = 0;
  *======================================================================*/
 PUBLIC int sys_get_ticks()
 {
-	//to make this syscall need long time to finish, so we can check
-	//if our os is kernel-preemptive.
-	/*				
-	int i, j;
-	i = 10000;
-	while(--i){
-		j = 10000;
-		while(--j){}
-	}
-	*/
-	
 	return ticks;
 }
 

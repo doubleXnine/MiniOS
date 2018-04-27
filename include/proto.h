@@ -27,7 +27,7 @@ void restart_initial();		//added by xw, 18/4/18
 void restart_restore();		//added by xw, 18/4/20
 void sched();				//added by xw, 18/4/18
 
-/* main.c */
+/* ktest.c */
 void TestA();
 void TestB();
 void TestC();
@@ -58,8 +58,10 @@ PUBLIC int pthread(void *arg);			//add by visual 2016.4.11
 PUBLIC void udisp_int(int arg);		//add by visual 2016.5.16
 PUBLIC void udisp_str(char* arg);	//add by visual 2016.5.16
 PUBLIC u32 exec(char* path);		//add by visual 2016.5.16
-PUBLIC void yield();
-PUBLIC void sleep(int n);
+PUBLIC void yield();				//added by xw, 18/4/19
+PUBLIC void sleep(int n);			//added by xw, 18/4/19
+PUBLIC void print_E();
+PUBLIC void print_F();
 
 /* syscallc.c */		//edit by visual 2016.4.6
 PUBLIC int   sys_get_ticks();           /* sys_call */
@@ -73,9 +75,13 @@ PUBLIC int sys_free_4k(void* AdddrLin);		//edit by visual 2016.5.9
 PUBLIC int sys_pthread(void *arg);		//add by visual 2016.4.11
 PUBLIC void sys_udisp_int(int arg);		//add by visual 2016.5.16
 PUBLIC void sys_udisp_str(char* arg);		//add by visual 2016.5.16
+
+/* proc.c */
 PUBLIC void sys_yield();
 PUBLIC void sys_sleep(int n);
 PUBLIC void sys_wakeup(void *channel);
+PUBLIC void sys_print_E();
+PUBLIC void sys_print_F();
 
 /*exec.c*/
 PUBLIC u32 sys_exec(char* path);		//add by visual 2016.5.23

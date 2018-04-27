@@ -32,6 +32,7 @@ extern	k_reenter
 extern	sys_call_table
 extern 	cr3_ready			;add by visual 2016.4.5
 extern  p_proc_current
+extern	p_proc_next			;added by xw, 18/4/26
 
 
 bits 32
@@ -454,14 +455,15 @@ sched:
         push    esi
 		mov		ebx,  [p_proc_current]				
 		mov		dword [ebx + ESP_SAVE_CONTEXT], esp	;save esp position in the kernel-stack of the process
-
 ;schedule
-		call	schedule	;schedule is a C function, save eax, ecx, edx if you want them to stay unchanged.
-		call	renew_env	;renew process executing environment
-		
+		call	schedule			;schedule is a C function, save eax, ecx, edx if you want them to stay unchanged.
+;prepare to run new process
+		mov		ebx,  [p_proc_next]	;added by xw, 18/4/26
+		mov		dword [p_proc_current], ebx
+		call	renew_env			;renew process executing environment
 ;restore_context
 		mov		ebx, [p_proc_current]
-		mov 	esp, [ebx + ESP_SAVE_CONTEXT]	;switch to a new kernel stack
+		mov 	esp, [ebx + ESP_SAVE_CONTEXT]		;switch to a new kernel stack
 		pop		esi
 		pop		edi
 		pop		ebx
@@ -533,7 +535,7 @@ restart_int:
 	mov 	esp, [eax + ESP_SAVE_INT]		;switch back to the kernel stack from the irq-stack	
 	call	sched							;save current process's context, invoke schedule(), and then
 											;switch to the chosen process's kernel stack and restore it's context
-											;Added by xw, 18/4/19
+											;added by xw, 18/4/19
 ;	call	renew_env
 	jmp     restart_restore
 
@@ -542,6 +544,7 @@ restart_syscall:
 ;	mov		dword [eax + SAVE_TYPE], ebx	;clear 3rd-bit of save_type
 	mov		eax, [p_proc_current]
 	mov 	esp, [eax + ESP_SAVE_SYSCALL]	;xw	restore esp position
+	call	sched							;added by xw, 18/4/26
 	jmp 	restart_restore
 
 ;xw	restart_reenter:

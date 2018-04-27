@@ -1,4 +1,25 @@
-********************************************************************
+***************************************************************************
+MiniOS v1.1.1  Date:18/4/27
+
+********
+Description:
+--some bugs fix and improvements.
+
+********
+Features added:
+--
+
+********
+Bugs fix and improvements:
+--Before a syscall returns to user space, call sched so there will be more
+  chance to run a new process.
+--Add p_proc_next in schedule() and sched, we only use p_proc_current
+  before.
+--Add new file ktest.c, where we put features test.
+--Fix a bug in the syscall yield(), the ticks value of the relevant process
+  should be assigned to 0, not just decreases by 1.
+
+***************************************************************************
 MiniOS v1.1  Date:18/4/21
 
 ********

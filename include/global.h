@@ -24,6 +24,7 @@ EXTERN  int     u_proc_sum; 		//内核中用户进程/线程数量 add by visual
 
 EXTERN	TSS		tss;
 EXTERN	PROCESS*	p_proc_current;
+EXTERN	PROCESS*	p_proc_next;	//the next process that will run. added by xw, 18/4/26
 
 extern	PROCESS		proc_table[];
 extern	char		task_stack[];
