@@ -111,10 +111,13 @@ typedef struct s_proc {
 	char* esp_save_context;	//to save the position of esp in the kernel stack of the process
 //	int   save_type;		//the cause of process losting CPU	//save_type is not needed any more, xw, 18/4/20
 							//1st-bit for interruption, 2nd-bit for context, 3rd-bit for syscall
-	void* channel;			/*if non-zero, sleeping on channel, which is a pointer of the target field
-							for example, as for syscall sleep(int n), the target field is 'ticks',
-							and the channel is a pointer of 'ticks'.
-							*/
+	void* channel;			/* if non-zero, sleeping on channel, which is a pointer of the target field
+							 * for example, as for syscall sleep(int n), the target field is 'ticks',
+							 *and the channel is a pointer of 'ticks'.
+							 */
+	int kernel_preemption;	/* the state of kernel_preemption, use preempt_enable() and preempt_disable()
+							 * to change the state. added by xw, 18/5/25
+ 							 */
 
 	LIN_MEMMAP	memmap;			//线性内存分部信息 		add by visual 2016.5.4
 	TREE_INFO info;				//记录进程树关系	add by visual 2016.5.25

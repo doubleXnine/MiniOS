@@ -21,6 +21,12 @@ PUBLIC void schedule()
 	PROCESS* p;
 	int	 greatest_ticks = 0;
 	
+	//Added by xw, 18/5/25
+	if (p_proc_current->task.kernel_preemption == 0) {	//if kernel preemtion is off		
+		p_proc_next = p_proc_current;
+		return;
+	}
+	
 	//Added by xw, 18/4/21
 	if (p_proc_current->task.stat == READY && p_proc_current->task.ticks > 0) {		
 		p_proc_next = p_proc_current;	//added by xw, 18/4/26
@@ -165,5 +171,16 @@ PUBLIC void sys_print_F()
 	disp_str(") ");
 }
 
+/* 
+ * declaration is in proto.h. added by xw, 18/5/25
+ */
+PUBLIC void preempt_enable()
+{
+	p_proc_current->task.kernel_preemption = 1;	
+}
 
+PUBLIC void preempt_disable()
+{
+	p_proc_current->task.kernel_preemption = 0;	
+}
 

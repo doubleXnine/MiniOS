@@ -82,6 +82,8 @@ PUBLIC void sys_sleep(int n);
 PUBLIC void sys_wakeup(void *channel);
 PUBLIC void sys_print_E();
 PUBLIC void sys_print_F();
+PUBLIC void preempt_enable();	//added by xw, 18/5/25
+PUBLIC void preempt_disable();	//added by xw, 18/5/25
 
 /*exec.c*/
 PUBLIC u32 sys_exec(char* path);		//add by visual 2016.5.23

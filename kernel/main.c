@@ -36,6 +36,15 @@ PUBLIC int kernel_main()
 	int pid;
 	u32 AddrLin,pte_addr_phy_temp,addr_phy_temp,err_temp;//edit by visual 2016.5.9
 	
+	/* set common fields in PCB. added by xw, 18/5/25 */
+	p_proc = proc_table;
+	for( pid=0 ; pid<NR_PCBS ; pid++ )
+	{
+		p_proc->task.kernel_preemption = 1;	//enable kernel preemption
+		p_proc++;
+	}
+	
+	p_proc = proc_table;
 	for( pid=0 ; pid<NR_TASKS ; pid++ )
 	{//1>对前NR_TASKS个PCB初始化,且状态为READY(生成的进程)
 		/*************基本信息*********************************/

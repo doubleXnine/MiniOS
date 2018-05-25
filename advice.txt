@@ -1,0 +1,9 @@
+***************************************************************************
+About Version Control
+It's recommended that you use git to do your version control. If you have
+not ever used any version control tools, just have a try and you will find
+coding is more pleasing.
+You can find source of MiniOS in Github at:
+https://github.com/doubleXnine/MiniOS
+xw, 18/4/29
+***************************************************************************
