@@ -26,3 +26,8 @@ mouse: enabled=0
 # enable key mapping, using US layout as default.
 #keyboard: enabled=1, map=/usr/share/bochs/keymaps/x11-pc-us.map
 keyboard: keymap=/usr/local/share/bochs/keymaps/x11-pc-us.map
+
+# hard disk; added by xw, 18/5/25
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="80m.img", mode=flat, cylinders=162, heads=16, spt=63
+

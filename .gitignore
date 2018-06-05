@@ -6,3 +6,5 @@
 # ignore *.bin
 *.bin
 
+# ignore hard disk image
+80m.img

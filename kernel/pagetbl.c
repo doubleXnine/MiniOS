@@ -79,6 +79,9 @@ PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，
 	u32 pte_addr_phy_temp = get_pte_phy_addr(p_proc_current->task.pid,cr2);//获取该线性地址对应的页表的物理地址//edit by visual 2016.5.19
 	
 	disp_color_str("PAGE FAULT!",0x74);
+	disp_str("\n");
+//commented by xw, 18/6/4
+/*
 	disp_color_str("Cr2=",0x74);	//灰底红字 
 	disp_int(cr2);
 	disp_color_str("eip=",0x74);	//灰底红字 
@@ -95,17 +98,19 @@ PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，
 	disp_int(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2)));//获取页目录中填写的内容
 	disp_color_str("Tbl=",0x74);
 	disp_int(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)));//获取页表中填写的内容
+*/
 	if( 0==pte_exist(pde_addr_phy_temp,cr2))
 	{//页表不存在
-		disp_color_str("[Tbl Fault!]",0x74);	//灰底红字 	
+//commented by xw, 18/6/4
+//		disp_color_str("[Tbl Fault!]",0x74);	//灰底红字 	
 		(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2))) |= PG_P;
-		disp_color_str("[Solved]",0x74);
+//		disp_color_str("[Solved]",0x74);
 	}
 	else
 	{//只是缺少物理页   
-		disp_color_str("[Page Fault!]",0x74);	//灰底红字		
+//		disp_color_str("[Page Fault!]",0x74);	//灰底红字		
 		(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)))|= PG_P;		 
-		disp_color_str("[Solved]",0x74);
+//		disp_color_str("[Solved]",0x74);
 	}
 	refresh_page_cache();
 }
@@ -338,7 +343,7 @@ PUBLIC int lin_mapping_phy(u32 AddrLin,//线性地址
 void clear_kernel_pagepte_low()
 {
 	u32 page_num = *(u32*)PageTblNumAddr; 
-	memset((void*)(K_PHY2LIN(KernelPageTblAddr)),0,4*page_num);		//从内核页目录中清除内核页目录项前8项		
+	memset((void*)(K_PHY2LIN(KernelPageTblAddr)),0,4*page_num);		//从内核页目录中清除内核页目录项前8项	
 	memset((void*)(K_PHY2LIN(KernelPageTblAddr+0x1000)),0,4096*page_num);	//从内核页表中清除线性地址的低端映射关系
 	refresh_page_cache();
 }

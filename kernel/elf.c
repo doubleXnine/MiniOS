@@ -9,22 +9,33 @@
 
 void read_Ehdr(u32 fd,Elf32_Ehdr *File_Ehdr,u32 offset)
 {
-	seek(offset);
-	read(fd,(void*)File_Ehdr,sizeof(Elf32_Ehdr));
+	//modified by xw, 18/5/30
+	// seek(offset);
+	// read(fd,(void*)File_Ehdr,sizeof(Elf32_Ehdr));
+	fake_seek(offset);
+	fake_read(fd,(void*)File_Ehdr,sizeof(Elf32_Ehdr));
+	//~xw
 	return;
 }
 
 void read_Phdr(u32 fd,Elf32_Phdr *File_Phdr,u32 offset)
 {
-	seek(offset);
-	read(fd,(void*)File_Phdr,sizeof(Elf32_Phdr));
+	//modified by xw, 18/5/30
+	//seek(offset);
+	// read(fd,(void*)File_Phdr,sizeof(Elf32_Phdr));
+	fake_seek(offset);	
+	fake_read(fd,(void*)File_Phdr,sizeof(Elf32_Phdr));
+	//~xw
 	return;
 }
 
 void read_Shdr(u32 fd,Elf32_Shdr *File_Shdr,u32 offset)
 {
-	seek(offset);
-	read(fd,(void*)File_Shdr,sizeof(Elf32_Shdr));
+	//modified by xw, 18/5/30
+	// seek(offset);
+	// read(fd,(void*)File_Shdr,sizeof(Elf32_Shdr));
+	fake_seek(offset);
+	fake_read(fd,(void*)File_Shdr,sizeof(Elf32_Shdr));	
 	return;
 }
 

@@ -40,7 +40,8 @@ PUBLIC u32 sys_exec(char *path)
 	}
 	
 	/*******************打开文件************************/
-	u32 fd = open(path,"r"); 
+	// u32 fd = open(path,"r"); 
+	u32 fd = fake_open(path,"r");	//modified by xw, 18/5/30
 	
 	/*************获取elf信息**************/
 	read_elf(fd,&Echo_Ehdr,Echo_Phdr,Echo_Shdr);//注意第一个取了地址，后两个是数组，所以没取地址，直接用了数组名
@@ -108,8 +109,12 @@ PRIVATE u32 exec_elfcpy(u32 fd,Elf32_Phdr Echo_Phdr,u32 attribute)  // 这部分
 		lin_mapping_phy(lin_addr,MAX_UNSIGNED_INT,p_proc_current->task.pid,PG_P  | PG_USU | PG_RWW/*说明*/,attribute);//说明：PDE属性尽量为读写，因为它要映射1024个物理页，可能既有数据，又有代码	//edit by visual 2016.5.19
 		if( file_offset<file_limit )
 		{//文件中还有数据，正常拷贝
-			seek(file_offset);
-			read(fd,&ch,1);
+			//modified by xw, 18/5/30
+			// seek(file_offset);
+			// read(fd,&ch,1);
+			fake_read(fd,&ch,1);
+			fake_seek(file_offset);
+			//~xw
 			*((u8*)lin_addr) = ch;//memcpy((void*)lin_addr,&ch,1);
 		}
 		else

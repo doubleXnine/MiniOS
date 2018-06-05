@@ -12,27 +12,141 @@
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "fs.h"
+#include "hd.h"
 
 int safe ;
+
+PUBLIC int HD_INT_WAITING_FLAG = 1;	//added by zcr
+
+PRIVATE int initialize_processes();	//added by xw, 18/5/26
+PRIVATE int initialize_cpus();		//added by xw, 18/6/2
 
 /*======================================================================*
                             kernel_main
  *======================================================================*/
 PUBLIC int kernel_main()
 {
-	disp_str("-----\"kernel_main\" begins-----\n");
-	init();//内存管理模块的初始化  add by liang 
+	int error;
 
-	clear_kernel_pagepte_low();		//add by visual 2016.5.13
+	//zcr added(清屏)
+	disp_pos = 0;
+	for (int i = 0; i < 25; i++) {
+		for (int j = 0; j < 80; j++) {
+			disp_str(" ");
+		}
+	}
+	disp_pos = 0;
+	//~zcr
+
+	disp_str("-----\"kernel_main\" begins-----\n");
+	kernel_initial = 1;	//kernel is in initial state. added by xw, 18/5/31
 	
+	init();//内存管理模块的初始化  add by liang 
+	
+	//putted to the end part of kernel_main(). modified by xw, 18/5/30
+	// clear_kernel_pagepte_low();		//add by visual 2016.5.13
+	
+	//initialize PCBs, added by xw, 18/5/26
+	error = initialize_processes();
+	if(error != 0)
+		return error;
+	//~xw
+	//initialize CPUs, added by xw, 18/6/2
+	error = initialize_cpus();
+	if(error != 0)
+		return error;
+	//~xw
+	
+	k_reenter = 0;	//record nest level of only interruption! it's different from Orange's.
+					//usage modified by xw
+	ticks = 0;		//initialize system-wide ticks
+	p_proc_current = cpu_table;
+
+	/************************************************************************
+	*device initialization
+	added by xw, 18/6/4
+	*************************************************************************/
+    /* initialize 8253 PIT */
+    out_byte(TIMER_MODE, RATE_GENERATOR);
+    out_byte(TIMER0, (u8) (TIMER_FREQ/HZ) );
+    out_byte(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
+	
+	/* initialize clock-irq */
+    put_irq_handler(CLOCK_IRQ, clock_handler); /* 设定时钟中断处理程序 */
+    enable_irq(CLOCK_IRQ);                     /* 让8259A可以接收时钟中断 */	
+	
+	/* initialize hard_disk-irq */
+	init_hd();
+	
+	/* enable interrupt, we should read information of some devices by interrupt.
+	 * Note that you must have initialized all devices ready before you enable
+	 * interrupt.
+	 */
+	seti();
+	
+    /***********************************************************************
+	open hard disk and initialize file system
+	coded by zcr on 2017.6.10. added by xw, 18/5/31
+	************************************************************************/
+	hd_open(MINOR(ROOT_DEV));
+	disp_str("HD Opened...    ");
+	init_fs();
+
+	//no meaning, but useful.
+	int m, n;
+	m++, n++;
+	/*************************************************************************
+	*第一个进程开始启动执行
+	**************************************************************************/
+	/* we don't want interrupt happens before processes run.
+	 * added by xw, 18/5/31
+	 */
+	cleari();
+	/* linear address 0~8M will no longer be mapped to physical address 0~8M.
+	 * moved by xw, 18/5/30
+	 */
+	clear_kernel_pagepte_low();
+	p_proc_current = proc_table;
+	kernel_initial = 0;	//kernel initialization is done. added by xw, 18/5/31
+	//restart();
+	restart_initial();	//modified by xw, 18/4/19
+	while(1){}
+}
+
+/*************************************************************************
+return 0 if there is no error, or return -1.
+added by xw, 18/6/2
+***************************************************************************/
+PRIVATE int initialize_cpus()
+{
+	u32 cr3_save;
+	
+	/* cr3 contains the base of page directory table. We save the current cr3, 
+	 * so we can use linear address 0~8M normally, on the contrary, using cr3
+	 * prepared for a process will incur page fault. added by xw, 18/6/2
+	 */
+	cr3_save = read_cr3();
+	
+	//lend state of process0 as the initial state of cpu0. added by xw, 18/6/1
+	cpu_table[0] = proc_table[0];
+	cpu_table->task.cr3 = cr3_save;
+	
+	return 0;
+}
+/*************************************************************************
+进程初始化部分
+return 0 if there is no error, or return -1.
+moved from kernel_main() by xw, 18/5/26
+***************************************************************************/
+PRIVATE int initialize_processes()
+{
 	TASK*		p_task		= task_table;
 	PROCESS*	p_proc		= proc_table;
 	u16		selector_ldt	= SELECTOR_LDT_FIRST;	
 	char* p_regs;	//point to registers in the new kernel stack, added by xw, 17/12/11
 	task_f eip_context;	//a funtion pointer, added by xw, 18/4/18
-	/*************************************************************************
-	*进程初始化部分 	edit by visual 2016.5.4 
-	***************************************************************************/
+	
 	int pid;
 	u32 AddrLin,pte_addr_phy_temp,addr_phy_temp,err_temp;//edit by visual 2016.5.9
 	
@@ -124,13 +238,14 @@ PUBLIC int kernel_main()
 		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
 		//p_proc->task.save_type = 1;
-		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+		p_proc->task.esp_save_context = p_regs - 10 * 4; //when the process is chosen to run for the first time, 
 														//sched() will fetch value from esp_save_context
 		eip_context = restart_restore;
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
 														//start run. added by xw, 18/4/18
 		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
-		
+										//we pop the value to EFLAGS in the process's first run, so
+										//we don't want this value to be random.
 		/***************变量调整****************************/
 		p_proc++;
 		p_task++;
@@ -172,7 +287,7 @@ PUBLIC int kernel_main()
 		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
 		//p_proc->task.save_type = 1;
-		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+		p_proc->task.esp_save_context = p_regs - 10 * 4; //when the process is chosen to run for the first time, 
 														//sched() will fetch value from esp_save_context
 		eip_context = restart_restore;
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
@@ -280,7 +395,7 @@ PUBLIC int kernel_main()
 		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
 		//p_proc->task.save_type = 1;
-		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+		p_proc->task.esp_save_context = p_regs - 10 * 4; //when the process is chosen to run for the first time, 
 														//sched() will fetch value from esp_save_context
 		eip_context = restart_restore;
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
@@ -327,13 +442,13 @@ PUBLIC int kernel_main()
 		/***************some field about process switch****************************/
 		p_proc->task.esp_save_int = p_regs; //initialize esp_save_int, added by xw, 17/12/11
 		//p_proc->task.save_type = 1;
-		p_proc->task.esp_save_context = p_regs - 6 * 4; //when the process is chosen to run for the first time, 
+		p_proc->task.esp_save_context = p_regs - 10 * 4; //when the process is chosen to run for the first time, 
 														//sched() will fetch value from esp_save_context
 		eip_context = restart_restore;
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
 														//start run. added by xw, 18/4/18
 		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
-		
+	
 		/***************变量调整****************************/
 		p_proc++;
 		selector_ldt += 1 << 3;
@@ -350,30 +465,8 @@ PUBLIC int kernel_main()
 	 * added by xw, 18/4/19
 	 */
 	proc_table[0].task.ticks = 2; 
-
-	/************************************************************************
-	*计时器部分初始化
-	*************************************************************************/
-    /* 初始化 8253 PIT */
-    out_byte(TIMER_MODE, RATE_GENERATOR);
-    out_byte(TIMER0, (u8) (TIMER_FREQ/HZ) );
-    out_byte(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
-	ticks = 0;
-
-	/***********************************************************************
-	*中断部分初始化
-	************************************************************************/
-    put_irq_handler(CLOCK_IRQ, clock_handler); /* 设定时钟中断处理程序 */
-    enable_irq(CLOCK_IRQ);                     /* 让8259A可以接收时钟中断 */
-	k_reenter = 0;
-
-	/*************************************************************************
-	*第一个进程开始启动执行
-	**************************************************************************/
-	p_proc_current	= proc_table;
-	//restart();
-	restart_initial();	//modified by xw, 18/4/19
-	while(1){}
+	
+	return 0;
 }
 
 

@@ -13,15 +13,25 @@
 #include "proc.h"
 #include "global.h"
 
-
 /*======================================================================*
                            clock_handler
  *======================================================================*/
 PUBLIC void clock_handler(int irq)
 {
 	ticks++;
+	
+	/* There is two stages - in kernel intializing or in process running.
+	 * Some operation shouldn't be valid in kernel intializing stage.
+	 * added by xw, 18/6/1
+	 */
+	if(kernel_initial == 1){
+		return;
+	}
+	
 	p_proc_current->task.ticks--;
-	sys_wakeup(&ticks);
+	sys_wakeup(&ticks);	//added by xw
+	
+	return;
 
 	//to make syscall reenter, deleted by xw, 17/12/11
 	/*
@@ -39,7 +49,7 @@ PUBLIC void clock_handler(int irq)
 	}
 	*/
 
-//	schedule();
+//	schedule();	//don't do scheduling in clock_handler any more.
 //	cr3_ready = p_proc_current->task.cr3;			//add by visual 2016.4.5
 //	sched();
 }

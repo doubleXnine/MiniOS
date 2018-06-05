@@ -11,7 +11,7 @@
 global	memcpy
 global	memset
 global  strcpy
-
+global  strlen	; zcr added from ch9/e/lib/string.asm
 
 ; ------------------------------------------------------------------------
 ; void* memcpy(void* es:p_dst, void* ds:p_src, int size);
@@ -113,4 +113,25 @@ strcpy:
 	ret                     ; 函数结束，返回
 ; strcpy 结束-------------------------------------------------------------
 
+; zcr added from ch9/e/lib/string.asm
+; ------------------------------------------------------------------------
+; int strlen(char* p_str);
+; ------------------------------------------------------------------------
+strlen:
+        push    ebp
+        mov     ebp, esp
 
+        mov     eax, 0                  ; 字符串长度开始是 0
+        mov     esi, [ebp + 8]          ; esi 指向首地址
+
+.1:
+        cmp     byte [esi], 0           ; 看 esi 指向的字符是否是 '\0'
+        jz      .2                      ; 如果是 '\0'，程序结束
+        inc     esi                     ; 如果不是 '\0'，esi 指向下一个字符
+        inc     eax                     ;         并且，eax 自加一
+        jmp     .1                      ; 如此循环
+
+.2:
+        pop     ebp
+        ret                             ; 函数结束，返回
+; ~zcr -------------------------------------------------------------------

@@ -12,6 +12,12 @@
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "fs.h"		//added by zcr
+
+//modified by xw, 18/6/2
+//EXTERN HD_INT_WAITING_FLAG;		//added by zcr
+EXTERN int volatile HD_INT_WAITING_FLAG;
+//~xw
 
 /*======================================================================*
                               schedule
@@ -20,6 +26,12 @@ PUBLIC void schedule()
 {
 	PROCESS* p;
 	int	 greatest_ticks = 0;
+	
+	//shouldn't choose a new process when kernel is initializing. added by xw, 18/6/1
+	if(kernel_initial == 1){
+		p_proc_next = p_proc_current;
+		return;
+	}
 	
 	//Added by xw, 18/5/25
 	if (p_proc_current->task.kernel_preemption == 0) {	//if kernel preemtion is off		
@@ -54,6 +66,8 @@ PUBLIC void schedule()
 			}
 		}
 	}
+	
+	return;
 }
 
 
@@ -183,4 +197,39 @@ PUBLIC void preempt_disable()
 {
 	p_proc_current->task.kernel_preemption = 0;	
 }
+
+/// zcr copied from ch9
+/*****************************************************************************
+ *                                inform_int
+ *****************************************************************************/
+/**
+ * <Ring 0> Inform a proc that an interrupt has occured.
+ * 
+ * @param task_nr  The task which will be informed.
+ *****************************************************************************/
+PUBLIC void inform_int()
+{
+	HD_INT_WAITING_FLAG = 0;
+}
+
+//modified by xw, 18/6/3
+//PUBLIC int ldt_seg_linear(struct s_proc* p, int idx)
+PUBLIC int ldt_seg_linear(PROCESS *p, int idx)
+{
+//	struct s_descriptor * d = &p->ldts[idx];
+	struct s_descriptor * d = &p->task.ldts[idx];
+	return d->base_high << 24 | d->base_mid << 16 | d->base_low;
+}
+//~xw
+
+PUBLIC void* va2la(int pid, void* va)
+{
+	// struct s_proc* p = &proc_table[pid];
+	PROCESS* p = p_proc_current;	//modified by xw, 18/6/3
+	u32 seg_base = ldt_seg_linear(p, INDEX_LDT_RW);
+	u32 la = seg_base + (u32)va;
+	
+	return (void*)la;
+}
+//~zcr
 

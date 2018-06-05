@@ -4,12 +4,18 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                                                     Forrest Yu, 2005
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+#include "fs.h"
 
 /* EXTERN is defined as extern except in global.c */
 #ifdef	GLOBAL_VARIABLES_HERE
 #undef	EXTERN
 #define	EXTERN
 #endif
+
+/* equal to 1 if kernel is initializing, equal to 0 if done.
+ * added by xw, 18/5/31
+ */
+EXTERN	int		kernel_initial;
 
 EXTERN	int		ticks;
 
@@ -26,6 +32,7 @@ EXTERN	TSS		tss;
 EXTERN	PROCESS*	p_proc_current;
 EXTERN	PROCESS*	p_proc_next;	//the next process that will run. added by xw, 18/4/26
 
+extern	PROCESS		cpu_table[];	//added by xw, 18/6/1
 extern	PROCESS		proc_table[];
 extern	char		task_stack[];
 extern  TASK        task_table[];
@@ -39,3 +46,17 @@ struct memfree{
 	u32	addr;
 	u32	size;
 };
+
+/// added by zcr
+EXTERN u8 *		fsbuf;
+EXTERN	const int	FSBUF_SIZE;
+EXTERN	MESSAGE		fs_msg;
+
+EXTERN	PROCESS * pcaller;
+EXTERN	struct inode *	root_inode;
+
+/* FS */
+EXTERN	struct file_desc	f_desc_table[NR_FILE_DESC];
+EXTERN	struct inode		inode_table[NR_INODE];
+EXTERN	struct super_block	super_block[NR_SUPER_BLOCK];
+//~zcr

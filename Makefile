@@ -36,7 +36,7 @@ OBJS		= kernel/kernel.o kernel/syscall.o kernel/start.o kernel/main.o kernel/clo
 			kernel/i8259.o kernel/global.o kernel/protect.o kernel/proc.o\
 			lib/kliba.o lib/klib.o lib/string.o kernel/syscallc.o kernel/memman.o kernel/pagetbl.o	\
 			kernel/elf.o kernel/file.o kernel/exec.o kernel/fork.o kernel/pthread.o \
-			kernel/ktest.o
+			kernel/ktest.o kernel/fs.o kernel/hd.o
 OBJSINIT	= init/init.o init/initstart.o lib/ulib.a 
 OBJSULIB = lib/string.o kernel/syscall.o
 DASMOUTPUT	= kernel.bin.asm
@@ -143,7 +143,7 @@ kernel/pagetbl.o: kernel/pagetbl.c include/type.h include/const.h include/protec
 lib/ulib.a:  $(OBJSULIB)
 	$(AR) $(ARFLAGS) -o $@  $(OBJSULIB)
 	
-init/init.o: init/init.c include/stdio.h
+init/init.o: init/init.c include/ulib.h
 	$(CC) $(CFLAGS) -o $@ $<
 	
 init/initstart.o: init/initstart.asm 
@@ -171,3 +171,12 @@ kernel/pthread.o: kernel/pthread.c /usr/include/stdc-predef.h include/type.h inc
 kernel/ktest.o: kernel/ktest.c include/type.h include/const.h include/protect.h include/string.h include/proc.h \
 			include/proto.h include/global.h
 	$(CC) $(CFLAGS) -o $@ $<
+# fs.o and hd.o; added by xw, 18/5/25
+kernel/fs.o: kernel/fs.c include/type.h include/const.h include/protect.h include/string.h include/proc.h \
+			include/proto.h include/global.h include/fs.h include/hd.h include/stdio.h
+	$(CC) $(CFLAGS) -o $@ $<
+kernel/hd.o: kernel/hd.c include/type.h include/const.h include/protect.h include/string.h include/proc.h \
+			include/proto.h include/global.h include/fs.h include/hd.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+

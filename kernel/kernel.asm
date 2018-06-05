@@ -48,14 +48,17 @@ StackTop:		; top of the irq-stack
 
 global _start	; 导出 _start
 
-;global restart
-global restart_initial	;Added by xw, 18/4/21
-global restart_restore	;Added by xw, 18/4/21
-;global save_context
-global sched			;Added by xw, 18/4/21
 global sys_call
-global read_cr2   ;//add by visual 2016.5.9
-global refresh_page_cache ; // add by visual 2016.5.12
+;global restart
+;global save_context
+global restart_initial	;added by xw, 18/4/21
+global restart_restore
+global sched			;~xw
+global read_cr2   		;add by visual 2016.5.9
+global read_cr3			;added by xw, 18/6/2
+global refresh_page_cache ;add by visual 2016.5.12
+global cleari			;added by xw, 18/5/31
+global seti				;~xw
 
 
 global	divide_error
@@ -229,10 +232,37 @@ hwint07:		; Interrupt routine for irq 7 (printer)
 
 ; ---------------------------------
 %macro	hwint_slave	1
-	push	%1
-	call	spurious_irq
-	add	esp, 4
-	hlt
+;primary edition, commented by xw
+;	push	%1
+;	call	spurious_irq
+;	add	esp, 4
+;	hlt
+;~xw
+
+	;added by xw, 18/5/29
+	call save_int			
+	inc  dword [k_reenter]  ;If k_reenter isn't equal to 0, there is no switching to the irq-stack, 
+							;which is performed in save_int. Added by xw, 18/4/21
+	
+	in	al, INT_S_CTLMASK	; `.
+	or	al, (1 << (%1 - 8))		;  | 屏蔽当前中断
+	out	INT_S_CTLMASK, al	; /
+	mov	al, EOI				; `.
+	out	INT_M_CTL, al		; / 置EOI位(master)
+	nop						; `.一定注意：slave和master都要置EOI	
+	out	INT_S_CTL, al		; / 置EOI位(slave)
+	sti						; CPU在响应中断的过程中会自动关中断，这句之后就允许响应新的中断
+	push %1						; `.
+	call [irq_table + 4 * %1]	;  | 中断处理程序
+	pop	ecx						; /
+	
+	cli
+	dec dword [k_reenter]
+	in	al, INT_S_CTLMASK		; `.
+	and	al, ~(1 << (%1 - 8))	;  | 恢复接受当前中断
+	out	INT_S_CTLMASK, al		; /
+	ret
+	;~xw
 %endmacro
 ; ---------------------------------
 
@@ -416,7 +446,8 @@ save_int:
 		jmp     [esi + RETADR - P_STACKBASE]
 instack:						;already in the irq-stack
 	 	push    restart_restore	;modified by xw, 18/4/19
-		jmp		[esp + RETADR - P_STACKBASE]
+;		jmp		[esp + RETADR - P_STACKBASE]
+		jmp		[esp + 4 + RETADR - P_STACKBASE]	;modified by xw, 18/6/4
                              
 
 save_syscall:			;can't modify EAX, for it contains syscall number
@@ -449,10 +480,11 @@ sched:
 		cli
 ;save_context
 		pushfd	
-		push	ebp
-        push    ebx      
-        push    edi     
-        push    esi
+		pushad
+;		push	ebp		;modified by xw, 18/6/4
+;       push    ebx      
+;       push    edi     
+;       push    esi
 		mov		ebx,  [p_proc_current]				
 		mov		dword [ebx + ESP_SAVE_CONTEXT], esp	;save esp position in the kernel-stack of the process
 ;schedule
@@ -464,10 +496,11 @@ sched:
 ;restore_context
 		mov		ebx, [p_proc_current]
 		mov 	esp, [ebx + ESP_SAVE_CONTEXT]		;switch to a new kernel stack
-		pop		esi
-		pop		edi
-		pop		ebx
-		pop		ebp
+;		pop		esi
+;		pop		edi
+;		pop		ebx
+;		pop		ebp
+		popad
 		popfd
 		sti
 		ret
@@ -581,6 +614,13 @@ restart_initial:							;Added by xw, 18/4/19
 read_cr2:
 	mov eax,cr2
 	ret
+
+; ====================================================================================
+;				    read_cr3			//added by xw, 18/6/2
+; ====================================================================================	
+read_cr3:
+	mov eax,cr3
+	ret
 	
 ; ====================================================================================
 ;				    refresh_page_cache			//add by visual 2016.5.12
@@ -589,3 +629,17 @@ refresh_page_cache:
 	mov eax,cr3
 	mov cr3,eax
 	ret
+	
+; ====================================================================================
+;				    cleari() and seti()
+; ====================================================================================
+; added by xw, 18/5/31
+cleari:
+	cli
+	ret
+	
+seti:
+	sti
+	ret
+	
+	

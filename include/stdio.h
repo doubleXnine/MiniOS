@@ -1,24 +1,22 @@
-﻿/********************************************
-*用户库函数声明		add by visual 2016.5.16
-*************************************************/
+﻿//zcr copied from chapter9
+/* EXTERN */
+//#define	EXTERN	extern	/* EXTERN is defined as extern except in global.c */
 
+/* string */
+#define	STR_DEFAULT_LEN	1024
 
-/*syscall.asm*/
-int get_ticks();
-int get_pid();					
-void* kmalloc(int size);			
-void* kmalloc_4k();			
-void* malloc(int size);			
-void* malloc_4k();				
-int free(void *arg);				
-int free_4k(void* AdddrLin);	
-int fork();			
-int pthread(void *arg);	
-void* udisp_int(int arg);
-void* udisp_str(char* arg);
+#define	O_CREAT		1
+#define	O_RDWR		2
 
+#define SEEK_SET	1
+#define SEEK_CUR	2
+#define SEEK_END	3
 
-/*string.asm*/
-void* memcpy(void* p_dst, void*  p_src, int size);//void* memcpy(void* es:p_dst, void* ds:p_src, int size);
-void memset(void* p_dst, char ch, int size);
-char* strcpy(char* p_dst, char* p_src);
+#define	MAX_PATH	128
+
+int	open(const char *pathname, int flags);
+int	close(int fd);
+int	read(int fd, void *buf, int count);
+int	write(int fd, const void *buf, int count);
+//~zcr
+
