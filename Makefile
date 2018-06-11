@@ -81,11 +81,15 @@ boot/loader.bin : boot/loader.asm boot/include/load.inc boot/include/fat12hdr.in
 	$(ASM) $(ASMBFLAGS) -o $@ $<
 
 $(ORANGESKERNEL) : $(OBJS)
-	$(LD) $(LDFLAGS) -o $(ORANGESKERNEL) $(OBJS)
+#modified by xw, 18/6/10
+#	$(LD) $(LDFLAGS) -o $(ORANGESKERNEL) $(OBJS)
+	$(LD) $(LDFLAGS) -Map kernel.map -o $(ORANGESKERNEL) $(OBJS)
 	
 $(ORANGESINIT): $(OBJSINIT)
-	$(LD) -m elf_i386 -s -o $(ORANGESINIT) $(OBJSINIT)
 #	$(LD) -s -o $(ORANGESINIT) $(OBJSINIT)
+#modified by xw, 18/6/11
+#	$(LD) -m elf_i386 -s -o $(ORANGESINIT) $(OBJSINIT)
+	$(LD) -m elf_i386 -s -Map init/init.map -o $(ORANGESINIT) $(OBJSINIT)
 	
 kernel/kernel.o : kernel/kernel.asm include/sconst.inc
 	$(ASM) $(ASMKFLAGS) -o $@ $<

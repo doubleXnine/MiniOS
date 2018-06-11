@@ -44,7 +44,8 @@ PUBLIC void init_fs()
 	disp_str("sb: ");
 	disp_int(sb);
 	disp_str(" \n");
-	if(sb->magic != MAGIC_V1) {
+	if(sb->magic != MAGIC_V1) 
+	{
 		mkfs();
 		disp_str("Make file system Done.\n");
 		for (; sb < &super_block[NR_SUPER_BLOCK]; sb++)
@@ -53,7 +54,6 @@ PUBLIC void init_fs()
 	}
 
 	root_inode = get_inode(ROOT_DEV, ROOT_INODE);
-
 }
 
 /*****************************************************************************

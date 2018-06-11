@@ -11,6 +11,9 @@
 #include "proc.h"
 #include "global.h"
 
+//to determine if a page fault is reparable. added by xw, 18/6/11
+u32 cr2_save;
+u32 cr2_count = 0;
 /*======================================================================*
                            switch_pde			added by xw, 17/12/11
  *switch the page directory table after schedule() is called
@@ -63,25 +66,23 @@ PUBLIC	u32 init_page_pte(u32 pid)
 /*======================================================================*
                            page_fault_handle		edit by visual 2016.5.9
  *======================================================================*/
+/*
 PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，代表缺页异常
 								u32 err_code,//错误码
 								u32 eip,//导致缺页的指令的线性地址
 								u32 cs,//发生错误时的代码段寄存器内容 
 								u32 eflags)//时发生错误的标志寄存器内容
 {//缺页中断处理函数
-	/*	打印出灰底红字的[Page Fault!]
-	*	修正该页错误
-	*	打印出灰底红字的[Solved]
-	*/
+	//	打印出灰底红字的[Page Fault!]
+	//	修正该页错误
+	//	打印出灰底红字的[Solved]
+		
 	//edit by visual 2016.4.28
 	u32 cr2 = read_cr2();				//add by visual 2016.5.9
 	u32 pde_addr_phy_temp = get_pde_phy_addr(p_proc_current->task.pid);//获取该进程页目录物理地址
 	u32 pte_addr_phy_temp = get_pte_phy_addr(p_proc_current->task.pid,cr2);//获取该线性地址对应的页表的物理地址//edit by visual 2016.5.19
 	
 	disp_color_str("PAGE FAULT!",0x74);
-	disp_str("\n");
-//commented by xw, 18/6/4
-/*
 	disp_color_str("Cr2=",0x74);	//灰底红字 
 	disp_int(cr2);
 	disp_color_str("eip=",0x74);	//灰底红字 
@@ -98,19 +99,98 @@ PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，
 	disp_int(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2)));//获取页目录中填写的内容
 	disp_color_str("Tbl=",0x74);
 	disp_int(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)));//获取页表中填写的内容
-*/
+
 	if( 0==pte_exist(pde_addr_phy_temp,cr2))
 	{//页表不存在
-//commented by xw, 18/6/4
-//		disp_color_str("[Tbl Fault!]",0x74);	//灰底红字 	
+		disp_color_str("[Tbl Fault!]",0x74);	//灰底红字 	
 		(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2))) |= PG_P;
-//		disp_color_str("[Solved]",0x74);
+		disp_color_str("[Solved]",0x74);
 	}
 	else
 	{//只是缺少物理页   
-//		disp_color_str("[Page Fault!]",0x74);	//灰底红字		
+		disp_color_str("[Page Fault!]",0x74);	//灰底红字	
 		(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)))|= PG_P;		 
-//		disp_color_str("[Solved]",0x74);
+		disp_color_str("[Solved]",0x74);
+	}
+	refresh_page_cache();
+}
+*/
+//modified by xw, 18/6/11
+PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，代表缺页异常
+								u32 err_code,//错误码
+								u32 eip,//导致缺页的指令的线性地址
+								u32 cs,//发生错误时的代码段寄存器内容 
+								u32 eflags)//时发生错误的标志寄存器内容
+{//缺页中断处理函数
+	u32 pde_addr_phy_temp;
+	u32 pte_addr_phy_temp;
+	u32 cr2;
+
+	cr2 = read_cr2();
+
+	//if page fault happens in kernel, it's an error.
+	if(kernel_initial == 1){
+		disp_str("\n");
+		disp_color_str("Page Fault\n",0x74);
+		disp_color_str("eip=",0x74);	//灰底红字 
+		disp_int(eip);
+		disp_color_str("eflags=",0x74);
+		disp_int(eflags);
+		disp_color_str("cs=",0x74);
+		disp_int(cs);
+		disp_color_str("err_code=",0x74);
+		disp_int(err_code);
+		disp_color_str("Cr2=",0x74);	//灰底红字 
+		disp_int(cr2);
+		halt();
+	}
+
+	//获取该进程页目录物理地址
+	pde_addr_phy_temp = get_pde_phy_addr(p_proc_current->task.pid);
+	//获取该线性地址对应的页表的物理地址
+	pte_addr_phy_temp = get_pte_phy_addr(p_proc_current->task.pid,cr2);
+
+	if(cr2 == cr2_save){
+		cr2_count++;
+		if(cr2_count == 5){
+			disp_str("\n");
+			disp_color_str("Page Fault\n",0x74);
+			disp_color_str("eip=",0x74);	//灰底红字 
+			disp_int(eip);
+			disp_color_str("eflags=",0x74);
+			disp_int(eflags);
+			disp_color_str("cs=",0x74);
+			disp_int(cs);
+			disp_color_str("err_code=",0x74);
+			disp_int(err_code);
+			disp_color_str("Cr2=",0x74);	//灰底红字 
+			disp_int(cr2);
+			disp_color_str("Cr3=",0x74);
+			disp_int(p_proc_current->task.cr3);
+			//获取页目录中填写的内容
+			disp_color_str("Pde=",0x74);
+			disp_int(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2)));
+			//获取页表中填写的内容
+			disp_color_str("Pte=",0x74);
+			disp_int(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)));
+			halt();
+		}
+	} else {
+		cr2_save = cr2;
+		cr2_count = 0;
+	}
+
+	if( 0==pte_exist(pde_addr_phy_temp,cr2))
+	{//页表不存在
+		// disp_color_str("[Pde Fault!]",0x74);	//灰底红字 	
+		(*((u32*)K_PHY2LIN(pde_addr_phy_temp) + get_pde_index(cr2))) |= PG_P;
+		// disp_color_str("[Solved]",0x74);
+	}
+	else
+	{//只是缺少物理页   
+		// disp_color_str("[Pte Fault!]",0x74);	//灰底红字	
+		(*((u32*)K_PHY2LIN(pte_addr_phy_temp) + get_pte_index(cr2)))|= PG_P;		 
+		// disp_color_str("[Solved]",0x74);
 	}
 	refresh_page_cache();
 }
@@ -150,7 +230,7 @@ PUBLIC inline u32 get_pte_index(u32 AddrLin)
                           get_pde_phy_addr	add by visual 2016.4.28
  *======================================================================*/
  PUBLIC inline u32 get_pde_phy_addr(u32 pid)
- {//获取页目录物理地址
+ {//获取页目录物理地址 
 	 if( proc_table[pid].task.cr3==0 )
 	 {//还没有初始化页目录
 		return -1;

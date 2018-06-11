@@ -26,13 +26,13 @@ PUBLIC void schedule()
 {
 	PROCESS* p;
 	int	 greatest_ticks = 0;
-	
+/*	
 	//shouldn't choose a new process when kernel is initializing. added by xw, 18/6/1
 	if(kernel_initial == 1){
 		p_proc_next = p_proc_current;
 		return;
 	}
-	
+*/	
 	//Added by xw, 18/5/25
 	if (p_proc_current->task.kernel_preemption == 0) {	//if kernel preemtion is off		
 		p_proc_next = p_proc_current;
@@ -224,8 +224,12 @@ PUBLIC int ldt_seg_linear(PROCESS *p, int idx)
 
 PUBLIC void* va2la(int pid, void* va)
 {
-	// struct s_proc* p = &proc_table[pid];
-	PROCESS* p = p_proc_current;	//modified by xw, 18/6/3
+	if(kernel_initial == 1){
+		return va;
+	}
+	
+	//struct s_proc* p = &proc_table[pid];
+	PROCESS* p = &proc_table[pid];	//modified by xw, 18/6/3
 	u32 seg_base = ldt_seg_linear(p, INDEX_LDT_RW);
 	u32 la = seg_base + (u32)va;
 	

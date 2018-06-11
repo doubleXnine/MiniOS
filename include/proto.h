@@ -40,6 +40,7 @@ void restart_restore();		//added by xw, 18/4/20
 void sched();				//added by xw, 18/4/18
 void cleari();				//added by xw, 18/5/31
 void seti();				//added by xw, 18/5/31
+void halt();                //added by xw, 18/6/11
 
 /* ktest.c */
 void TestA();

@@ -120,17 +120,8 @@ added by xw, 18/6/2
 ***************************************************************************/
 PRIVATE int initialize_cpus()
 {
-	u32 cr3_save;
-	
-	/* cr3 contains the base of page directory table. We save the current cr3, 
-	 * so we can use linear address 0~8M normally, on the contrary, using cr3
-	 * prepared for a process will incur page fault. added by xw, 18/6/2
-	 */
-	cr3_save = read_cr3();
-	
-	//lend state of process0 as the initial state of cpu0. added by xw, 18/6/1
-	cpu_table[0] = proc_table[0];
-	cpu_table->task.cr3 = cr3_save;
+	//just use the fields of struct PCB in cpu_table, we needn't initialize
+	//something at present.
 	
 	return 0;
 }

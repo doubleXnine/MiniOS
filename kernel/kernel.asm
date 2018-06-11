@@ -33,6 +33,7 @@ extern	sys_call_table
 extern 	cr3_ready			;add by visual 2016.4.5
 extern  p_proc_current
 extern	p_proc_next			;added by xw, 18/4/26
+extern	kernel_initial		;added by xw, 18/6/10
 
 
 bits 32
@@ -58,7 +59,8 @@ global read_cr2   		;add by visual 2016.5.9
 global read_cr3			;added by xw, 18/6/2
 global refresh_page_cache ;add by visual 2016.5.12
 global cleari			;added by xw, 18/5/31
-global seti				;~xw
+global seti				;added by xw, 18/5/31
+global halt  			;added by xw, 18/6/11
 
 
 global	divide_error
@@ -353,6 +355,10 @@ general_protection:
 	push	13		; vector_no	= D
 	jmp	exception
 page_fault:
+;page_fault_origin:
+;	push	14		; vector_no	= E
+;	jmp	exception
+
 	;add by visual 2016.4.18
 	pushad          ; `.
     push    ds      ;  |
@@ -566,6 +572,8 @@ sys_call:
 restart_int:
 	mov		eax, [p_proc_current]
 	mov 	esp, [eax + ESP_SAVE_INT]		;switch back to the kernel stack from the irq-stack	
+	cmp	    dword [kernel_initial], 0		;added by xw, 18/6/10
+	jnz		restart_restore
 	call	sched							;save current process's context, invoke schedule(), and then
 											;switch to the chosen process's kernel stack and restore it's context
 											;added by xw, 18/4/19
@@ -633,7 +641,7 @@ refresh_page_cache:
 ; ====================================================================================
 ;				    cleari() and seti()
 ; ====================================================================================
-; added by xw, 18/5/31
+;added by xw, 18/5/31
 cleari:
 	cli
 	ret
@@ -641,5 +649,9 @@ cleari:
 seti:
 	sti
 	ret
+
+;added by xw, 18/6/11
+halt:
+	hlt
 	
 	

@@ -586,6 +586,9 @@ PUBLIC void hd_handler(int irq)
 	 */
 	hd_status = in_byte(REG_STATUS);
 	
+	//just for test
+	// sys_wakeup(&ticks);
+	
 	inform_int();
 
 	/* There is two stages - in kernel intializing or in process running.

@@ -408,7 +408,7 @@ void TestB()
 	disp_str("\n");
 
 	int lseek_status = lseek(fd, 1, SEEK_SET);
-	disp_str("(TestC)return value of lseek is: ");
+	disp_str("(TestB)return value of lseek is: ");
 	disp_int(lseek_status);
 	disp_str("  ");
 	

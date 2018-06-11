@@ -29,7 +29,6 @@ PUBLIC void clock_handler(int irq)
 	}
 	
 	p_proc_current->task.ticks--;
-	sys_wakeup(&ticks);	//added by xw
 	
 	return;
 
