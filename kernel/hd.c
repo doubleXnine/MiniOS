@@ -14,92 +14,45 @@
 #include "const.h"
 #include "protect.h"
 #include "string.h"
-#include "fs.h"
 #include "proc.h"
 #include "global.h"
 #include "proto.h"
+#include "fs_const.h"
 #include "hd.h"
+#include "fs.h"
+#include "fs_misc.h"
 
 
-PUBLIC  void	init_hd			();
-PUBLIC  void	hd_open			(int device);
-PUBLIC  void	hd_close		(int device);
-PUBLIC  void	hd_rdwt			(MESSAGE * p);
-PUBLIC  void	hd_ioctl		(MESSAGE * p);
-PUBLIC  void	hd_cmd_out		(struct hd_cmd* cmd);
-PRIVATE void	get_part_table	(int drive, int sect_nr, struct part_ent * entry);
-PRIVATE void	partition		(int device, int style);
-PUBLIC  void	print_hdinfo	(struct hd_info * hdi);
-PUBLIC  int		waitfor			(int mask, int val, int timeout);
-PUBLIC  void	interrupt_wait	();
-PUBLIC 	void	hd_identify		(int drive);
-PUBLIC  void	print_identify_info	(u16* hdinfo);
-PUBLIC	void 	hd_handler		(int irq);
+PUBLIC  void	init_hd();
+PUBLIC  void	hd_open(int device);
+PUBLIC  void	hd_close(int device);
+PUBLIC  void	hd_rdwt(MESSAGE * p);
+PUBLIC  void	hd_ioctl(MESSAGE * p);
+PUBLIC  void	hd_cmd_out(struct hd_cmd* cmd);
+PRIVATE void	get_part_table(int drive, int sect_nr, struct part_ent * entry);
+PRIVATE void	partition(int device, int style);
+PUBLIC  void	print_hdinfo(struct hd_info * hdi);
+PUBLIC  int		waitfor(int mask, int val, int timeout);
+PUBLIC  void	interrupt_wait();
+PUBLIC 	void	hd_identify(int drive);
+PUBLIC  void	print_identify_info(u16* hdinfo);
+PUBLIC	void 	hd_handler(int irq);
+PUBLIC	void	inform_int();
 
-PRIVATE	u8		hd_status;
-PRIVATE	u8		hdbuf[SECTOR_SIZE * 2];
-PRIVATE	struct hd_info	hd_info[1];
+PRIVATE volatile int hd_int_waiting_flag;
+PRIVATE	u8 hd_status;
+PRIVATE	u8 hdbuf[SECTOR_SIZE * 2];
+PRIVATE	struct hd_info hd_info[1];
 
 #define	DRV_OF_DEV(dev) (dev <= MAX_PRIM ? \
 			 dev / NR_PRIM_PER_DRIVE : \
 			 (dev - MINOR_hd1a) / NR_SUB_PER_DRIVE)
 
-//modified by xw, 18/6/2
-//EXTERN HD_INT_WAITING_FLAG;
-EXTERN int volatile HD_INT_WAITING_FLAG;
-//~xw
-
-/*****************************************************************************
- *                                task_hd
- *****************************************************************************/
-/**
- * Main loop of HD driver.
- * 
- *****************************************************************************/
-// PUBLIC void task_hd()
-// {
-// 	MESSAGE msg;
-
-// 	init_hd();
-
-// 	while (1) {
-// 		send_recv(RECEIVE, ANY, &msg);
-
-// 		int src = msg.source;
-
-// 		switch (msg.type) {
-// 		case DEV_OPEN:
-// 			hd_open(msg.DEVICE);
-// 			break;
-
-// 		case DEV_CLOSE:
-// 			hd_close(msg.DEVICE);
-// 			break;
-
-// 		case DEV_READ:
-// 		case DEV_WRITE:
-// 			hd_rdwt(&msg);
-// 			break;
-
-// 		case DEV_IOCTL:
-// 			hd_ioctl(&msg);
-// 			break;
-
-// 		default:
-// 			dump_msg("HD driver::unknown msg", &msg);
-// 			spin("FS::main_loop (invalid msg.type)");
-// 			break;
-// 		}
-
-// 		send_recv(SEND, src, &msg);
-// 	}
-// }
-
 /*****************************************************************************
  *                                init_hd
  *****************************************************************************/
 /**
- * <Ring 0> Check hard drive, set IRQ handler, enable IRQ and initialize data
+ * <Ring 1> Check hard drive, set IRQ handler, enable IRQ and initialize data
  *          structures.
  *****************************************************************************/
 PUBLIC void init_hd()
@@ -108,10 +61,11 @@ PUBLIC void init_hd()
 
 	/* Get the number of drives from the BIOS data area */
 	u8 * pNrDrives = (u8*)(0x475);
+	// printf("NrDrives:%d.\n", *pNrDrives);
 	disp_str("NrDrives:");
 	disp_int(*pNrDrives);
 	disp_str("\n");
-	
+
 	put_irq_handler(AT_WINI_IRQ, hd_handler);
 	enable_irq(CASCADE_IRQ);
 	enable_irq(AT_WINI_IRQ);
@@ -125,7 +79,7 @@ PUBLIC void init_hd()
  *                                hd_open
  *****************************************************************************/
 /**
- * <Ring 0> This routine handles DEV_OPEN message. It identify the drive
+ * <Ring 1> This routine handles DEV_OPEN message. It identify the drive
  * of the given device and read the partition table of the drive if it
  * has not been read.
  * 
@@ -134,11 +88,16 @@ PUBLIC void init_hd()
 PUBLIC void hd_open(int device)
 {
 	int drive = DRV_OF_DEV(device);
+	/// zcr
+	// disp_str("drive: ");
+	// disp_int(drive);
+	// disp_str("\n");
 
 	hd_identify(drive);
 
 	if (hd_info[drive].open_cnt++ == 0) {
 		partition(drive * (NR_PART_PER_DRIVE + 1), P_PRIMARY);
+		// print_hdinfo(&hd_info[drive]);
 	}
 }
 
@@ -146,7 +105,7 @@ PUBLIC void hd_open(int device)
  *                                hd_close
  *****************************************************************************/
 /**
- * <Ring 0> This routine handles DEV_CLOSE message. 
+ * <Ring 1> This routine handles DEV_CLOSE message. 
  * 
  * @param device The device to be opened.
  *****************************************************************************/
@@ -162,25 +121,26 @@ PUBLIC void hd_close(int device)
  *                                hd_rdwt
  *****************************************************************************/
 /**
- * <Ring 0> This routine handles DEV_READ and DEV_WRITE message.
+ * <Ring 1> This routine handles DEV_READ and DEV_WRITE message.
  * 
  * @param p Message ptr.
  *****************************************************************************/
-PUBLIC void hd_rdwt(MESSAGE *p)
+PUBLIC void hd_rdwt(MESSAGE * p)
 {
-	
 	int drive = DRV_OF_DEV(p->DEVICE);
 
 	u64 pos = p->POSITION;
-	
-	// We only allow to R/W from a SECTOR boundary:
 
-	u32 sect_nr = (u32)(pos >> SECTOR_SIZE_SHIFT); // pos / SECTOR_SIZE
+	/**
+	 * We only allow to R/W from a SECTOR boundary:
+	 */
+
+	u32 sect_nr = (u32)(pos >> SECTOR_SIZE_SHIFT); /* pos / SECTOR_SIZE */
 	int logidx = (p->DEVICE - MINOR_hd1a) % NR_SUB_PER_DRIVE;
 	sect_nr += p->DEVICE < MAX_PRIM ?
 		hd_info[drive].primary[p->DEVICE].base :
 		hd_info[drive].logical[logidx].base;
-	
+
 	struct hd_cmd cmd;
 	cmd.features	= 0;
 	cmd.count	= (p->CNT + SECTOR_SIZE - 1) / SECTOR_SIZE;
@@ -218,7 +178,7 @@ PUBLIC void hd_rdwt(MESSAGE *p)
  *                                hd_ioctl
  *****************************************************************************/
 /**
- * <Ring 0> This routine handles the DEV_IOCTL message.
+ * <Ring 1> This routine handles the DEV_IOCTL message.
  * 
  * @param p  Ptr to the MESSAGE.
  *****************************************************************************/
@@ -248,7 +208,7 @@ PUBLIC void hd_ioctl(MESSAGE * p)
  *                                get_part_table
  *****************************************************************************/
 /**
- * <Ring 0> Get a partition table of a drive.
+ * <Ring 1> Get a partition table of a drive.
  * 
  * @param drive   Drive nr (0 for the 1st disk, 1 for the 2nd, ...)n
  * @param sect_nr The sector at which the partition table is located.
@@ -279,7 +239,7 @@ PRIVATE void get_part_table(int drive, int sect_nr, struct part_ent * entry)
  *                                partition
  *****************************************************************************/
 /**
- * <Ring 0> This routine is called when a device is opened. It reads the
+ * <Ring 1> This routine is called when a device is opened. It reads the
  * partition table(s) and fills the hd_info struct.
  * 
  * @param device Device nr.
@@ -341,7 +301,7 @@ PRIVATE void partition(int device, int style)
  *                                print_hdinfo
  *****************************************************************************/
 /**
- * <Ring 0> Print disk info.
+ * <Ring 1> Print disk info.
  * 
  * @param hdi  Ptr to struct hd_info.
  *****************************************************************************/
@@ -394,7 +354,7 @@ PUBLIC void print_hdinfo(struct hd_info * hdi)
  *                                hd_identify
  *****************************************************************************/
 /**
- * <Ring 0> Get the disk information.
+ * <Ring 1> Get the disk information.
  * 
  * @param drive  Drive Nr.
  *****************************************************************************/
@@ -406,22 +366,21 @@ PUBLIC void hd_identify(int drive)
 	hd_cmd_out(&cmd);
 	interrupt_wait();
 	port_read(REG_DATA, hdbuf, SECTOR_SIZE);
-	
+
 	print_identify_info((u16*)hdbuf);
-	
+
 	u16* hdinfo = (u16*)hdbuf;
 
 	hd_info[drive].primary[0].base = 0;
-	// Total Nr of User Addressable Sectors
+	/* Total Nr of User Addressable Sectors */
 	hd_info[drive].primary[0].size = ((int)hdinfo[61] << 16) + hdinfo[60];
-	
 }
 
 /*****************************************************************************
  *                            print_identify_info
  *****************************************************************************/
 /**
- * <Ring 0> Print the hdinfo retrieved via ATA_IDENTIFY command.
+ * <Ring 1> Print the hdinfo retrieved via ATA_IDENTIFY command.
  * 
  * @param hdinfo  The buffer read from the disk i/o port.
  *****************************************************************************/
@@ -478,7 +437,7 @@ PUBLIC void print_identify_info(u16* hdinfo)
  *                                hd_cmd_out
  *****************************************************************************/
 /**
- * <Ring 0> Output a command to HD controller.
+ * <Ring 1> Output a command to HD controller.
  * 
  * @param cmd  The command struct ptr.
  *****************************************************************************/
@@ -489,18 +448,19 @@ PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
 	 * and should proceed no further unless and until BSY=0
 	 */
 	if (!waitfor(STATUS_BSY, 0, HD_TIMEOUT))
+		// panic("hd error.");
 		disp_str("hd error.");
-	
-	// Activate the Interrupt Enable (nIEN) bit
+
+	/* Activate the Interrupt Enable (nIEN) bit */
 	out_byte(REG_DEV_CTRL, 0);
-	// Load required parameters in the Command Block Registers
+	/* Load required parameters in the Command Block Registers */
 	out_byte(REG_FEATURES, cmd->features);
 	out_byte(REG_NSECTOR,  cmd->count);
 	out_byte(REG_LBA_LOW,  cmd->lba_low);
 	out_byte(REG_LBA_MID,  cmd->lba_mid);
 	out_byte(REG_LBA_HIGH, cmd->lba_high);
 	out_byte(REG_DEVICE,   cmd->device);
-	// Write the command code to the Command Register
+	/* Write the command code to the Command Register */
 	out_byte(REG_CMD,     cmd->command);
 }
 
@@ -508,39 +468,40 @@ PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
  *                                interrupt_wait
  *****************************************************************************/
 /**
- * <Ring 0> Wait until a disk interrupt occurs.
+ * <Ring 1> Wait until a disk interrupt occurs.
  * 
  *****************************************************************************/
 /// modified by zcr(using Huper's method.)
 // PUBLIC void interrupt_wait()
 // {
-// 	while(HD_INT_WAITING_FLAG) {
+// 	while(hd_int_waiting_flag) {
 // 		// milli_delay(20);/// waiting for the harddisk interrupt.
 // 	}
-// 	HD_INT_WAITING_FLAG = 1;
+// 	hd_int_waiting_flag = 1;
 // }
+
 PUBLIC void interrupt_wait()
 {
-	while(HD_INT_WAITING_FLAG) {
+	while(hd_int_waiting_flag) {
 		/* milli_delay invoke syscall get_ticks, so we can't use it.
 		 * for this scene, just do nothing is OK. modified by xw, 18/6/1
 		 */
 		//milli_delay(5);/// waiting for the harddisk interrupt.
 	}
-	HD_INT_WAITING_FLAG = 1;
+	hd_int_waiting_flag = 1;
 }
 
 /*****************************************************************************
  *                                waitfor
  *****************************************************************************/
 /**
- * <Ring 0> Wait for a certain status.
+ * <Ring 1> Wait for a certain status.
  * 
  * @param mask    Status mask.
  * @param val     Required status.
  * @param timeout Timeout in milliseconds.
  * 
- * @return One if success, zero if timeout.
+ * @return One if sucess, zero if timeout.
  *****************************************************************************/
 PUBLIC int waitfor(int mask, int val, int timeout)
 {
@@ -572,12 +533,6 @@ PUBLIC int waitfor(int mask, int val, int timeout)
  *****************************************************************************/
 PUBLIC void hd_handler(int irq)
 {
-	/* In this function, if we invoke a C function with one or more parameter,
-	 * we will get page fault, you can have a try. It's really weird. If you know 
-	 * the reason behind, please contact me at dongxuwei@163.com, thanks a lot.
-	 * added by xw, 18/6/3
-	 */
-	
 	/*
 	 * Interrupts are cleared when the host
 	 *   - reads the Status Register,
@@ -585,12 +540,8 @@ PUBLIC void hd_handler(int irq)
 	 *   - writes to the Command Register.
 	 */
 	hd_status = in_byte(REG_STATUS);
-	
-	//just for test
-	// sys_wakeup(&ticks);
-	
 	inform_int();
-
+	
 	/* There is two stages - in kernel intializing or in process running.
 	 * Some operation shouldn't be valid in kernel intializing stage.
 	 * added by xw, 18/6/1
@@ -599,9 +550,16 @@ PUBLIC void hd_handler(int irq)
 		return;
 	}
 	
-	//some operation
+	//some operation only for process
+	
 	return;
 }
 
-	
-	
+/*****************************************************************************
+ *                                inform_int
+ *****************************************************************************/
+PUBLIC void inform_int()
+{
+	hd_int_waiting_flag = 0;
+	return;
+}

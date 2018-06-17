@@ -6,14 +6,15 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 
 //to determine if a page fault is reparable. added by xw, 18/6/11
 u32 cr2_save;
 u32 cr2_count = 0;
+
 /*======================================================================*
                            switch_pde			added by xw, 17/12/11
  *switch the page directory table after schedule() is called
@@ -115,6 +116,7 @@ PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，
 	refresh_page_cache();
 }
 */
+
 //modified by xw, 18/6/11
 PUBLIC void page_fault_handler(	u32 vec_no,//异常编号，此时应该是14，代表缺页异常
 								u32 err_code,//错误码
@@ -230,7 +232,7 @@ PUBLIC inline u32 get_pte_index(u32 AddrLin)
                           get_pde_phy_addr	add by visual 2016.4.28
  *======================================================================*/
  PUBLIC inline u32 get_pde_phy_addr(u32 pid)
- {//获取页目录物理地址 
+ {//获取页目录物理地址
 	 if( proc_table[pid].task.cr3==0 )
 	 {//还没有初始化页目录
 		return -1;
@@ -423,7 +425,7 @@ PUBLIC int lin_mapping_phy(u32 AddrLin,//线性地址
 void clear_kernel_pagepte_low()
 {
 	u32 page_num = *(u32*)PageTblNumAddr; 
-	memset((void*)(K_PHY2LIN(KernelPageTblAddr)),0,4*page_num);		//从内核页目录中清除内核页目录项前8项	
+	memset((void*)(K_PHY2LIN(KernelPageTblAddr)),0,4*page_num);		//从内核页目录中清除内核页目录项前8项		
 	memset((void*)(K_PHY2LIN(KernelPageTblAddr+0x1000)),0,4096*page_num);	//从内核页表中清除线性地址的低端映射关系
 	refresh_page_cache();
 }

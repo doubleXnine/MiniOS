@@ -158,6 +158,18 @@ LABEL_GOON_LOADING_FILE:
 	add	ax, dx
 	add	ax, DeltaSectorNo
 	add	bx, [BPB_BytsPerSec]
+;to support the kernel.bin larger than 64KB
+;copied from Orange's_9_h, xw, 18/6/12
+	jc	.1			;if bx becomes 0, indicates that the kernel is larger than 64KB
+	jmp	.2
+.1:
+	push	ax		;es += 0x1000, points to next segment
+	mov	ax,	es
+	add ax, 1000h
+	mov es, ax
+	pop ax
+.2:
+;~xw
 	jmp	LABEL_GOON_LOADING_FILE
 LABEL_FILE_LOADED:
 

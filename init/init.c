@@ -2,8 +2,7 @@
 *	init进程	add by visual 2016.5.16
 *******************************************************/
 
-//#include "stdio.h"
-#include "ulib.h"
+#include "stdio.h"
 
 int global=0;
 
@@ -75,8 +74,8 @@ void pthread_test1()
                           Syscall Pthread Test
 added by xw, 18/4/27
  *======================================================================*/
-	/*
-void main(int arg,char *argv[])
+//	/*
+int main(int arg,char *argv[])
 {
 	int i=0;
 	
@@ -89,7 +88,7 @@ void main(int arg,char *argv[])
 		i=10000;
 		while(--i){}
 	}
-	return ;
+	return 0;
 }
 //	*/
 
@@ -97,7 +96,7 @@ void main(int arg,char *argv[])
                           Syscall Fork Test
 added by xw, 18/4/27
  *======================================================================*/
-//	/*
+	/*
 void main(int arg,char *argv[])
 {
 	int i=0;

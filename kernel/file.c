@@ -6,10 +6,10 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 
 
 #define	BaseOfEchoFilePhyAddr	(K_PHY2LIN(0x7e00))   //目前就这一个文件

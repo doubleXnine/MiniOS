@@ -20,10 +20,10 @@ global	out_byte
 global	in_byte
 global  enable_irq
 global  disable_irq
-
-; added by zcr
-global port_read
-global port_write
+global	port_read
+global	port_write
+global	enable_int
+global	disable_int
 
 ; ========================================================================
 ;                  void disp_str(char * info);
@@ -244,3 +244,4 @@ enable_int:
 	sti
 	ret
 ; added by zcr end
+

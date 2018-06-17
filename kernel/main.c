@@ -8,16 +8,14 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
-#include "fs.h"
+#include "proto.h"
+#include "fs_const.h"
 #include "hd.h"
-
-int safe ;
-
-PUBLIC int HD_INT_WAITING_FLAG = 1;	//added by zcr
+#include "fs.h"
+#include "fs_misc.h"
 
 PRIVATE int initialize_processes();	//added by xw, 18/5/26
 PRIVATE int initialize_cpus();		//added by xw, 18/6/2
@@ -37,26 +35,21 @@ PUBLIC int kernel_main()
 		}
 	}
 	disp_pos = 0;
-	//~zcr
 
 	disp_str("-----\"kernel_main\" begins-----\n");
 	kernel_initial = 1;	//kernel is in initial state. added by xw, 18/5/31
 	
 	init();//内存管理模块的初始化  add by liang 
 	
-	//putted to the end part of kernel_main(). modified by xw, 18/5/30
-	// clear_kernel_pagepte_low();		//add by visual 2016.5.13
-	
 	//initialize PCBs, added by xw, 18/5/26
 	error = initialize_processes();
 	if(error != 0)
 		return error;
-	//~xw
+
 	//initialize CPUs, added by xw, 18/6/2
 	error = initialize_cpus();
 	if(error != 0)
 		return error;
-	//~xw
 	
 	k_reenter = 0;	//record nest level of only interruption! it's different from Orange's.
 					//usage modified by xw
@@ -83,7 +76,7 @@ PUBLIC int kernel_main()
 	 * Note that you must have initialized all devices ready before you enable
 	 * interrupt.
 	 */
-	seti();
+	enable_int();
 	
     /***********************************************************************
 	open hard disk and initialize file system
@@ -91,25 +84,24 @@ PUBLIC int kernel_main()
 	************************************************************************/
 	hd_open(MINOR(ROOT_DEV));
 	disp_str("HD Opened...    ");
+	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE)); //allocate fs buffer. added by xw, 18/6/15
 	init_fs();
 
-	//no meaning, but useful.
-	int m, n;
-	m++, n++;
 	/*************************************************************************
 	*第一个进程开始启动执行
 	**************************************************************************/
 	/* we don't want interrupt happens before processes run.
 	 * added by xw, 18/5/31
 	 */
-	cleari();
+	disable_int();
+	
 	/* linear address 0~8M will no longer be mapped to physical address 0~8M.
-	 * moved by xw, 18/5/30
+	 * add by visual 2016.5.13; moved by xw, 18/5/30
 	 */
 	clear_kernel_pagepte_low();
+	
 	p_proc_current = proc_table;
 	kernel_initial = 0;	//kernel initialization is done. added by xw, 18/5/31
-	//restart();
 	restart_initial();	//modified by xw, 18/4/19
 	while(1){}
 }
@@ -125,6 +117,7 @@ PRIVATE int initialize_cpus()
 	
 	return 0;
 }
+
 /*************************************************************************
 进程初始化部分
 return 0 if there is no error, or return -1.
@@ -135,9 +128,11 @@ PRIVATE int initialize_processes()
 	TASK*		p_task		= task_table;
 	PROCESS*	p_proc		= proc_table;
 	u16		selector_ldt	= SELECTOR_LDT_FIRST;	
-	char* p_regs;	//point to registers in the new kernel stack, added by xw, 17/12/11
+	char* p_regs;		//point to registers in the new kernel stack, added by xw, 17/12/11
 	task_f eip_context;	//a funtion pointer, added by xw, 18/4/18
-	
+	/*************************************************************************
+	*进程初始化部分 	edit by visual 2016.5.4 
+	***************************************************************************/
 	int pid;
 	u32 AddrLin,pte_addr_phy_temp,addr_phy_temp,err_temp;//edit by visual 2016.5.9
 	
@@ -145,11 +140,11 @@ PRIVATE int initialize_processes()
 	p_proc = proc_table;
 	for( pid=0 ; pid<NR_PCBS ; pid++ )
 	{
-		p_proc->task.kernel_preemption = 1;	//enable kernel preemption
+		//some operations
 		p_proc++;
 	}
 	
-	p_proc = proc_table;
+	p_proc = proc_table;	
 	for( pid=0 ; pid<NR_TASKS ; pid++ )
 	{//1>对前NR_TASKS个PCB初始化,且状态为READY(生成的进程)
 		/*************基本信息*********************************/
@@ -235,8 +230,7 @@ PRIVATE int initialize_processes()
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
 														//start run. added by xw, 18/4/18
 		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
-										//we pop the value to EFLAGS in the process's first run, so
-										//we don't want this value to be random.
+		
 		/***************变量调整****************************/
 		p_proc++;
 		p_task++;
@@ -439,7 +433,7 @@ PRIVATE int initialize_processes()
 		*(u32*)(p_regs - 4) = (u32)eip_context;			//initialize EIP in the context, so the process can
 														//start run. added by xw, 18/4/18
 		*(u32*)(p_regs - 8) = 0x1202;	//initialize EFLAGS in the context, IF=1, IOPL=1. xw, 18/4/20
-	
+		
 		/***************变量调整****************************/
 		p_proc++;
 		selector_ldt += 1 << 3;
@@ -455,7 +449,7 @@ PRIVATE int initialize_processes()
 	 * user code. Thus, it's will look weird, for proc_table[0] don't output first.
 	 * added by xw, 18/4/19
 	 */
-	proc_table[0].task.ticks = 2; 
+	proc_table[0].task.ticks = 2;
 	
 	return 0;
 }

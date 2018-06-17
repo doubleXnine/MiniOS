@@ -5,10 +5,10 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 
 PRIVATE int pthread_pcb_cpy(PROCESS *p_child,PROCESS *p_parent);
 PRIVATE int pthread_update_info(PROCESS *p_child,PROCESS *p_parent);

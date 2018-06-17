@@ -3,17 +3,17 @@
  * work normally with new features added.
  * added by xw, 18/4/27
  */
-
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
-#include "stdio.h"
-#include "fs.h"
+#include "proto.h"
+#include "fs_const.h"
 #include "hd.h"
+#include "fs.h"
+#include "fs_misc.h"
 
 /*======================================================================*
                          Interrupt Handling Test
@@ -282,7 +282,7 @@ void initial()
                           Syscall Exec Test
 added by xw, 18/4/27
  *======================================================================*/
-/* You should also enable fork/pthread/null in init.c */
+/* You should also enable Syscall Exec Test in init.c */
 //	/*
 void TestA()
 {
@@ -315,13 +315,13 @@ void TestC()
 }
 
 void initial()
-{
+ {
 	exec("init/init.bin");
 	while(1)
 	{
 		
 	}
-}
+ }
 //	*/
 
 /*======================================================================*
@@ -472,6 +472,7 @@ void initial()
 	}
 }
 //	*/
+
 
 
 

@@ -1,10 +1,10 @@
 #include "type.h"				
 #include "const.h"				
-#include "protect.h"			
-#include "proto.h"			
+#include "protect.h"						
 #include "string.h"				
 #include "proc.h"				
 #include "global.h"
+#include "proto.h"
 
 int disp_pos;
 

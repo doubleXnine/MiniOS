@@ -4,10 +4,10 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 #include "elf.h"
 
 
@@ -41,7 +41,7 @@ PUBLIC u32 sys_exec(char *path)
 	
 	/*******************打开文件************************/
 	// u32 fd = open(path,"r"); 
-	u32 fd = fake_open(path,"r");	//modified by xw, 18/5/30
+	u32 fd = fake_open(path,"r");	//modified by xw, 18/5/30 
 	
 	/*************获取elf信息**************/
 	read_elf(fd,&Echo_Ehdr,Echo_Phdr,Echo_Shdr);//注意第一个取了地址，后两个是数组，所以没取地址，直接用了数组名
@@ -112,8 +112,8 @@ PRIVATE u32 exec_elfcpy(u32 fd,Elf32_Phdr Echo_Phdr,u32 attribute)  // 这部分
 			//modified by xw, 18/5/30
 			// seek(file_offset);
 			// read(fd,&ch,1);
-			fake_read(fd,&ch,1);
 			fake_seek(file_offset);
+			fake_read(fd,&ch,1);
 			//~xw
 			*((u8*)lin_addr) = ch;//memcpy((void*)lin_addr,&ch,1);
 		}
@@ -186,9 +186,13 @@ PRIVATE int exec_pcb_init(char* path)
 	p_proc_current->task.regs.cs	= ((8 * 0) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.ds	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.es	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
-	p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.ss	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
-	p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_USER;
+	//we want them these two same to kernel process's. modified by xw, 18/6/13
+	// p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
+	// p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_USER;
+	p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_TASK;
+	p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_TASK;
+	//~xw
 	p_proc_current->task.regs.eflags = 0x202; /* IF=1,bit2 永远是1 */
 	
 	/***************copy registers data****************************/

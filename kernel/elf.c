@@ -1,10 +1,10 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 #include "elf.h"
 
 void read_Ehdr(u32 fd,Elf32_Ehdr *File_Ehdr,u32 offset)

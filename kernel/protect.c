@@ -8,9 +8,9 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 
 
 /* 本文件内函数声明 */
@@ -291,12 +291,12 @@ PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int efl
 		disp_int(err_code);
 	}
 
-	//deleted by xw, 18/6/10
-/*
+	//deleted by xw, 18/6/14
+	/*
 	if(vec_no==14)	//edit by visual 2016.4.18			
 	{
 		page_fault_handler(vec_no, err_code, eip, cs, eflags);
 	}
-*/
+	*/
 }
 

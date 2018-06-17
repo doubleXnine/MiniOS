@@ -57,7 +57,3 @@ typedef struct
 }Elf32_Shdr;
 
 PUBLIC void read_elf(u32 fd,Elf32_Ehdr* Echo_Ehdr,Elf32_Phdr Echo_Phdr[],Elf32_Shdr Echo_Shdr[]);
-
-PUBLIC u32 fake_open(char* path,char* mode);
-PUBLIC u32 fake_read(u32 fd,void* buffer,u32 size);
-PUBLIC u32 fake_seek(u32 pos);

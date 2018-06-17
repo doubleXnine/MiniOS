@@ -35,7 +35,6 @@ extern  p_proc_current
 extern	p_proc_next			;added by xw, 18/4/26
 extern	kernel_initial		;added by xw, 18/6/10
 
-
 bits 32
 
 [SECTION .data]
@@ -43,25 +42,26 @@ clock_int_msg		db	"^", 0
 
 [SECTION .bss]
 StackSpace		resb	2 * 1024
-StackTop:		; top of the irq-stack
+StackTop:		; used only as irq-stack in minios. added by xw
+
+; added by xw, 18/6/15
+KernelStackSpace	resb	2 * 1024
+KernelStackTop:	; used as stack of kernel itself
+; ~xw
 
 [section .text]	; 代码在此
 
 global _start	; 导出 _start
 
-global sys_call
 ;global restart
+global restart_initial	;Added by xw, 18/4/21
+global restart_restore	;Added by xw, 18/4/21
 ;global save_context
-global restart_initial	;added by xw, 18/4/21
-global restart_restore
-global sched			;~xw
-global read_cr2   		;add by visual 2016.5.9
-global read_cr3			;added by xw, 18/6/2
-global refresh_page_cache ;add by visual 2016.5.12
-global cleari			;added by xw, 18/5/31
-global seti				;added by xw, 18/5/31
+global sched			;Added by xw, 18/4/21
+global sys_call
+global read_cr2   ;//add by visual 2016.5.9
+global refresh_page_cache ; // add by visual 2016.5.12
 global halt  			;added by xw, 18/6/11
-
 
 global	divide_error
 global	single_step_exception
@@ -140,7 +140,9 @@ _start:
 
 
 	; 把 esp 从 LOADER 挪到 KERNEL
-	mov	esp, StackTop	; 堆栈在 bss 段中
+	; modified by xw, 18/6/15
+	;mov	esp, StackTop	; 堆栈在 bss 段中
+	mov	esp, KernelStackTop	; 堆栈在 bss 段中
 
 	mov	dword [disp_pos], 0
 
@@ -355,9 +357,9 @@ general_protection:
 	push	13		; vector_no	= D
 	jmp	exception
 page_fault:
-;page_fault_origin:
-;	push	14		; vector_no	= E
-;	jmp	exception
+	;page_fault_origin:
+	;push	14		; vector_no	= E
+	;jmp exception
 
 	;add by visual 2016.4.18
 	pushad          ; `.
@@ -485,12 +487,12 @@ sched:
 ;for C function assumes that they stay unchanged. added by xw, 18/4/19
 		cli
 ;save_context
-		pushfd	
-		pushad
-;		push	ebp		;modified by xw, 18/6/4
-;       push    ebx      
-;       push    edi     
-;       push    esi
+		pushfd
+		pushad			;modified by xw, 18/6/4
+;		push	ebp
+;		push    ebx      
+;		push    edi     
+;		push    esi
 		mov		ebx,  [p_proc_current]				
 		mov		dword [ebx + ESP_SAVE_CONTEXT], esp	;save esp position in the kernel-stack of the process
 ;schedule
@@ -553,10 +555,11 @@ sys_call:
 	push 	ebx							;push the argument the syscall need
 	call    [sys_call_table + eax * 4]	;将参数压入堆栈后再调用函数			add by visual 2016.4.6
 	add		esp, 4						;clear the argument in the stack, modified by xw, 17/12/11
+	cli									;moved by xw, 18/6/12
 	mov		edx, [p_proc_current]				;\
 	mov 	esi, [edx + ESP_SAVE_SYSCALL]		; |the return value of C function is in EAX
 	mov     [esi + EAXREG - P_STACKBASE], eax	;/
-	cli
+;	cli
 	ret
 
 ; ====================================================================================
@@ -617,21 +620,14 @@ restart_initial:							;Added by xw, 18/4/19
 	jmp 	restart_restore
 
 ; ====================================================================================
-;				    read_cr2			//add by visual 2016.5.9
+;				    read_cr2				//add by visual 2016.5.9
 ; ====================================================================================	
 read_cr2:
 	mov eax,cr2
 	ret
-
-; ====================================================================================
-;				    read_cr3			//added by xw, 18/6/2
-; ====================================================================================	
-read_cr3:
-	mov eax,cr3
-	ret
 	
 ; ====================================================================================
-;				    refresh_page_cache			//add by visual 2016.5.12
+;				    refresh_page_cache		//add by visual 2016.5.12
 ; ====================================================================================	
 refresh_page_cache:
 	mov eax,cr3
@@ -639,19 +635,7 @@ refresh_page_cache:
 	ret
 	
 ; ====================================================================================
-;				    cleari() and seti()
+;				    halt					//added by xw, 18/6/11			
 ; ====================================================================================
-;added by xw, 18/5/31
-cleari:
-	cli
-	ret
-	
-seti:
-	sti
-	ret
-
-;added by xw, 18/6/11
 halt:
 	hlt
-	
-	

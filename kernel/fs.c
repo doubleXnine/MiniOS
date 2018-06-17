@@ -5,11 +5,20 @@
 #include "protect.h"
 #include "string.h"
 #include "proc.h"
-#include "fs.h"
 #include "global.h"
 #include "proto.h"
+#include "fs_const.h"
 #include "hd.h"
-#include "stdio.h"
+#include "fs.h"
+#include "fs_misc.h"
+
+/* FSBUF_SIZE is defined as macro in fs_const.h.
+ * The physical address space 6MB~7MB is used as fs buffer in Orange's, but we can't use this
+ * space directly in minios. We allocate the fs buffer space in kernel initialization stage. 
+ * modified by xw, 18/6/15
+ */
+// PUBLIC const int	FSBUF_SIZE	= 0x100000;
+// PUBLIC u8 * fsbuf = (u8*)0x600000;
 
 PUBLIC void mkfs();
 
@@ -24,7 +33,7 @@ PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filena
 
 /// zcr added
 PUBLIC void init_fs() 
-{	
+{
 	/// added by zcr
 	disp_str("Initializing file system...\n");
 
@@ -43,9 +52,8 @@ PUBLIC void init_fs()
 	sb = get_super_block(ROOT_DEV);
 	disp_str("sb: ");
 	disp_int(sb);
-	disp_str(" \n");
-	if(sb->magic != MAGIC_V1) 
-	{
+	disp_str(" ");
+	if(sb->magic != MAGIC_V1) {
 		mkfs();
 		disp_str("Make file system Done.\n");
 		for (; sb < &super_block[NR_SUPER_BLOCK]; sb++)
@@ -60,7 +68,7 @@ PUBLIC void init_fs()
  *                                mkfs
  *****************************************************************************/
 /**
- * <Ring 0> Make a available Orange'S FS in the disk. It will
+ * <Ring 1> Make a available Orange'S FS in the disk. It will
  *          - Write a super block to sector 1.
  *          - Create three special files: dev_tty0, dev_tty1, dev_tty2
  *          - Create the inode map
@@ -236,7 +244,7 @@ PUBLIC void mkfs()
  *                                rw_sector
  *****************************************************************************/
 /**
- * <Ring 0> R/W a sector via messaging with the corresponding driver.
+ * <Ring 1> R/W a sector via messaging with the corresponding driver.
  * 
  * @param io_type  DEV_READ or DEV_WRITE
  * @param dev      device nr
@@ -278,7 +286,13 @@ PUBLIC int rw_sector_zcr(int io_type, int dev, u64 pos, int bytes, int proc_nr, 
 PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)
 {
 	MESSAGE driver_msg;
-	
+	// disp_int(bytes); ///bytes才是真正的proc_nr! why...?
+	/// zcr debug
+	// if(io_type == DEV_WRITE) {
+	// 	disp_str("who call:");
+	// 	disp_int(bytes);
+	// 	disp_str("\n");
+	// }
 	driver_msg.type		= io_type;
 	driver_msg.DEVICE	= MINOR(dev);
 	//attention
@@ -692,7 +706,7 @@ PUBLIC int strip_path(char * filename, const char * pathname, struct inode** ppi
  *                                read_super_block
  *****************************************************************************/
 /**
- * <Ring 0> Read super block from the given device then write it into a free
+ * <Ring 1> Read super block from the given device then write it into a free
  *          super_block[] slot.
  * 
  * @param dev  From which device the super block comes.
@@ -701,23 +715,28 @@ PRIVATE void read_super_block(int dev)
 {
 	int i;
 	MESSAGE driver_msg;
-	
+
 	driver_msg.type		= DEV_READ;
 	driver_msg.DEVICE	= MINOR(dev);
 	driver_msg.POSITION	= SECTOR_SIZE * 1;
 	driver_msg.BUF		= fsbuf;
 	driver_msg.CNT		= SECTOR_SIZE;
 	driver_msg.PROC_NR	= proc2pid(p_proc_current);///TASK_A
-
+	// assert(dd_map[MAJOR(dev)].driver_nr != INVALID_DRIVER);
+	// send_recv(BOTH, dd_map[MAJOR(dev)].driver_nr, &driver_msg);
 	/// zcr added
+	// disp_str("In read_super_block()  before hd_rdwt\n");	/// just for debugging
 	hd_rdwt(&driver_msg);
+	// disp_str("In read_super_block()  after hd_rdwt\n");
 
-	// find a free slot in super_block[]
+	/* find a free slot in super_block[] */
 	for (i = 0; i < NR_SUPER_BLOCK; i++)
 		if (super_block[i].sb_dev == NO_DEV)
 			break;
 	if (i == NR_SUPER_BLOCK)
 		disp_str("Panic: super_block slots used up");	/// zcr modified.
+
+	// assert(i == 0); /* currently we use only the 1st slot */
 
 	struct super_block * psb = (struct super_block *)fsbuf;
 
@@ -730,7 +749,7 @@ PRIVATE void read_super_block(int dev)
  *                                get_super_block
  *****************************************************************************/
 /**
- * <Ring 0> Get the super block from super_block[].
+ * <Ring 1> Get the super block from super_block[].
  * 
  * @param dev Device nr.
  * 
@@ -767,7 +786,7 @@ PUBLIC struct super_block * get_super_block(int dev)
  *                                get_inode
  *****************************************************************************/
 /**
- * <Ring 0> Get the inode ptr of given inode nr. A cache -- inode_table[] -- is
+ * <Ring 1> Get the inode ptr of given inode nr. A cache -- inode_table[] -- is
  * maintained to make things faster. If the inode requested is already there,
  * just return it. Otherwise the inode will be read from the disk.
  * 
@@ -838,7 +857,7 @@ PUBLIC void put_inode(struct inode * pinode)
  *                                sync_inode
  *****************************************************************************/
 /**
- * <Ring 0> Write the inode back to the disk. Commonly invoked as soon as the
+ * <Ring 1> Write the inode back to the disk. Commonly invoked as soon as the
  *          inode is changed.
  * 
  * @param p I-node ptr.

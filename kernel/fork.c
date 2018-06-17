@@ -5,10 +5,10 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
 
 PRIVATE int fork_mem_cpy(u32 ppid,u32 pid);
 PRIVATE int fork_pcb_cpy(PROCESS* p_child);

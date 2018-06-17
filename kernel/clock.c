@@ -8,10 +8,11 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "string.h"
 #include "proc.h"
 #include "global.h"
+#include "proto.h"
+
 
 /*======================================================================*
                            clock_handler
@@ -29,8 +30,7 @@ PUBLIC void clock_handler(int irq)
 	}
 	
 	p_proc_current->task.ticks--;
-	
-	return;
+	sys_wakeup(&ticks);
 
 	//to make syscall reenter, deleted by xw, 17/12/11
 	/*
@@ -48,7 +48,7 @@ PUBLIC void clock_handler(int irq)
 	}
 	*/
 
-//	schedule();	//don't do scheduling in clock_handler any more.
+//	schedule();
 //	cr3_ready = p_proc_current->task.cr3;			//add by visual 2016.4.5
 //	sched();
 }
