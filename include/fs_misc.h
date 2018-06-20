@@ -8,7 +8,6 @@
 #define	FS_MISC_H
 
 /* APIs of file operation */
-#define	STR_DEFAULT_LEN	1024	/* string length */
 #define	MAX_PATH	128
 #define	O_CREAT		1
 #define	O_RDWR		2
@@ -20,6 +19,17 @@ PUBLIC int open(const char *pathname, int flags);
 PUBLIC int close(int fd);
 PUBLIC int read(int fd, void *buf, int count);
 PUBLIC int write(int fd, const void *buf, int count);
+PUBLIC int lseek(int fd, int offset, int whence);
+PUBLIC int unlink(const char *pathname);
+
+//added by xw, 18/6/18
+PUBLIC int sys_open(void *uesp);
+PUBLIC int sys_close(void *uesp);
+PUBLIC int sys_read(void *uesp);
+PUBLIC int sys_write(void *uesp);
+PUBLIC int sys_lseek(void *uesp);
+//~xw
+PUBLIC int sys_unlink(void *uesp);	//added by xw, 18/6/19
 
 /**
  * MESSAGE mechanism is borrowed from MINIX

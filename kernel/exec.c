@@ -186,13 +186,9 @@ PRIVATE int exec_pcb_init(char* path)
 	p_proc_current->task.regs.cs	= ((8 * 0) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.ds	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.es	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
+	p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
 	p_proc_current->task.regs.ss	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
-	//we want them these two same to kernel process's. modified by xw, 18/6/13
-	// p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_USER;
-	// p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_USER;
-	p_proc_current->task.regs.fs	= ((8 * 1) & SA_RPL_MASK & SA_TI_MASK)| SA_TIL | RPL_TASK;
-	p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_TASK;
-	//~xw
+	p_proc_current->task.regs.gs	= (SELECTOR_KERNEL_GS & SA_RPL_MASK)| RPL_USER;
 	p_proc_current->task.regs.eflags = 0x202; /* IF=1,bit2 永远是1 */
 	
 	/***************copy registers data****************************/

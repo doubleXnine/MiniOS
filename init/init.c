@@ -74,7 +74,7 @@ void pthread_test1()
                           Syscall Pthread Test
 added by xw, 18/4/27
  *======================================================================*/
-//	/*
+	/*
 int main(int arg,char *argv[])
 {
 	int i=0;
@@ -134,3 +134,70 @@ void main(int arg,char *argv[])
 	return ;
 }
 //	*/
+
+/*======================================================================*
+                           File System Test
+added by xw, 18/6/19
+ *======================================================================*/
+//	/*
+void main(int arg,char *argv[])
+{
+//	while (1) {}
+	
+	int fd;
+	int i, n;
+	const int rd_bytes = 4;
+	char filename[MAX_FILENAME_LEN+1] = "blah";
+	char bufr[4];
+	const char bufw[] = "abcde";
+
+	udisp_str("\n(U)");
+	fd = open(filename, O_CREAT | O_RDWR);	
+	
+	if(fd != -1) {
+		udisp_str("File created: ");
+		udisp_str(filename);
+		udisp_str(" (fd ");
+		udisp_int(fd);
+		udisp_str(")\n");	
+		
+		n = write(fd, bufw, strlen(bufw));
+		if(n != strlen(bufw)) {
+			udisp_str("Write error\n");
+		}
+		
+		close(fd);
+	}
+
+	udisp_str("(U)");
+	fd = open(filename, O_RDWR);
+	udisp_str("   ");
+	udisp_str("File opened. fd: ");
+	udisp_int(fd);
+	udisp_str("\n");
+
+	udisp_str("(U)");
+	int lseek_status = lseek(fd, 1, SEEK_SET);
+	udisp_str("Return value of lseek is: ");
+	udisp_int(lseek_status);
+	udisp_str("  \n");
+
+	udisp_str("(U)");
+	n = read(fd, bufr, rd_bytes);
+	if(n != rd_bytes) {
+		udisp_str("Read error\n");
+	}
+	bufr[n] = 0;
+	udisp_str("Bytes read: ");
+	udisp_str(bufr);
+	udisp_str("\n");
+
+	close(fd);
+	
+	while (1) {
+	}
+	
+	return;
+}
+//	*/
+

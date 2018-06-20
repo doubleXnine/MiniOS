@@ -49,4 +49,4 @@ EOI		equ	0x20
 SELECTOR_FLAT_C		equ		0x08		; LOADER 里面已经确定了的.
 SELECTOR_TSS		equ		0x20		; TSS. 从外层跳到内存时 SS 和 ESP 的值从里面获得.
 SELECTOR_KERNEL_CS	equ		SELECTOR_FLAT_C
-
+SELECTOR_VIDEO		equ		0x1b		; added by xw, 18/6/20

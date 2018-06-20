@@ -62,6 +62,7 @@ global sys_call
 global read_cr2   ;//add by visual 2016.5.9
 global refresh_page_cache ; // add by visual 2016.5.12
 global halt  			;added by xw, 18/6/11
+global get_arg			;added by xw, 18/6/18
 
 global	divide_error
 global	single_step_exception
@@ -369,7 +370,10 @@ page_fault:
     push    gs      ; /
     mov     dx, ss
     mov     ds, dx
-    mov     es, dx	
+    mov     es, dx
+	mov		fs, dx							;value of fs and gs in user process is different to that in kernel
+	mov		dx, SELECTOR_VIDEO - 2			;added by xw, 18/6/20
+	mov		gs, dx
 	
 	mov 	eax,[esp + RETADR - P_STACKBASE]; 把压入的错误码放进eax
 	mov 	ebx,[esp + EIPREG - P_STACKBASE]; 把压入的eip放进ebx
@@ -447,6 +451,9 @@ save_int:
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
+		mov		fs, dx							;value of fs and gs in user process is different to that in kernel
+		mov		dx, SELECTOR_VIDEO - 2			;added by xw, 18/6/20
+		mov		gs, dx
 
         mov     esi, esp  		                                        
 	    mov     esp, StackTop   ;switches to the irq-stack from current process's kernel stack 
@@ -471,6 +478,9 @@ save_syscall:			;can't modify EAX, for it contains syscall number
         mov     dx, ss
         mov     ds, dx
         mov     es, dx
+		mov		fs, dx							;value of fs and gs in user process is different to that in kernel
+		mov		dx, SELECTOR_VIDEO - 2			;added by xw, 18/6/20
+		mov		gs, dx
 
         mov     esi, esp                    
 ;       inc     dword [k_reenter]                        
@@ -555,11 +565,10 @@ sys_call:
 	push 	ebx							;push the argument the syscall need
 	call    [sys_call_table + eax * 4]	;将参数压入堆栈后再调用函数			add by visual 2016.4.6
 	add		esp, 4						;clear the argument in the stack, modified by xw, 17/12/11
-	cli									;moved by xw, 18/6/12
-	mov		edx, [p_proc_current]				;\
-	mov 	esi, [edx + ESP_SAVE_SYSCALL]		; |the return value of C function is in EAX
-	mov     [esi + EAXREG - P_STACKBASE], eax	;/
-;	cli
+	cli									
+	mov		edx, [p_proc_current]
+	mov 	esi, [edx + ESP_SAVE_SYSCALL]
+	mov     [esi + EAXREG - P_STACKBASE], eax	;the return value of C function is in EAX
 	ret
 
 ; ====================================================================================
@@ -639,3 +648,29 @@ refresh_page_cache:
 ; ====================================================================================
 halt:
 	hlt
+	
+; ====================================================================================
+;				    u32 get_arg(void *uesp, int order)		//added by xw, 18/6/18			
+; ====================================================================================
+; used to get the specified argument of the syscall from user space stack
+; @uesp: user space stack pointer
+; @order: which argument you want to get
+; @uesp+0: the number of args, @uesp+8: the first arg, @uesp+12: the second arg...
+get_arg:
+	push ebp
+	mov ebp, esp
+	push esi
+	push edi
+	mov esi, dword [ebp + 8]	;void *uesp
+	mov edi, dword [ebp + 12]	;int order
+	mov eax, dword [esi + edi * 4 + 4]
+	pop edi
+	pop esi
+	pop ebp
+	ret
+
+
+
+
+
+

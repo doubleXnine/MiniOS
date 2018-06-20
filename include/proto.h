@@ -35,6 +35,7 @@ void restart_initial();		//added by xw, 18/4/18
 void restart_restore();		//added by xw, 18/4/20
 void sched();				//added by xw, 18/4/18
 void halt();                //added by xw, 18/6/11
+u32 get_arg(void *uesp, int order);	//added by xw, 18/6/18
 
 /* ktest.c */
 void TestA();

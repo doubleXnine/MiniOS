@@ -35,7 +35,7 @@ PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filena
 PUBLIC void init_fs() 
 {
 	/// added by zcr
-	disp_str("Initializing file system...\n");
+	disp_str("Initializing file system...  ");
 
 	/// zcr copied from ch9/e/fs/main.c/init_fs()
 	int i;
@@ -50,9 +50,9 @@ PUBLIC void init_fs()
 	/* load super block of ROOT */
 	read_super_block(ROOT_DEV);
 	sb = get_super_block(ROOT_DEV);
-	disp_str("sb: ");
+	disp_str("Superblock Address:");
 	disp_int(sb);
-	disp_str(" ");
+	disp_str(" \n");
 	if(sb->magic != MAGIC_V1) {
 		mkfs();
 		disp_str("Make file system Done.\n");
@@ -323,7 +323,9 @@ PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void
  * 
  * @return File descriptor if successful, otherwise -1.
  *****************************************************************************/
-PUBLIC int open(const char *pathname, int flags)
+//open is a syscall interface now. added by xw, 18/6/18
+// PUBLIC int open(const char *pathname, int flags)
+PUBLIC int real_open(const char *pathname, int flags)
 {
 	// MESSAGE msg; 
 
@@ -1117,7 +1119,9 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
  * 
  * @return Zero if successful, otherwise -1.
  *****************************************************************************/
-PUBLIC int close(int fd)
+//close is a syscall interface now. added by xw, 18/6/18
+// PUBLIC int close(int fd)
+PUBLIC int real_close(int fd)
 {
 	return do_close(fd);	// terrible(always returns 0)
 }
@@ -1158,7 +1162,9 @@ PUBLIC int do_close(int fd)
  * @return  On success, the number of bytes read are returned.
  *          On error, -1 is returned.
  *****************************************************************************/
-PUBLIC int read(int fd, void *buf, int count)
+//read is a syscall interface now. added by xw, 18/6/18
+// PUBLIC int read(int fd, void *buf, int count)
+PUBLIC int real_read(int fd, void *buf, int count)
 {
 	// MESSAGE msg;
 	fs_msg.type = READ;
@@ -1185,7 +1191,9 @@ PUBLIC int read(int fd, void *buf, int count)
  * @return  On success, the number of bytes written are returned.
  *          On error, -1 is returned.
  *****************************************************************************/
-PUBLIC int write(int fd, const void *buf, int count)
+//write is a syscall interface now. added by xw, 18/6/18
+// PUBLIC int write(int fd, const void *buf, int count)
+PUBLIC int real_write(int fd, const void *buf, int count)
 {
 	// MESSAGE msg;
 	fs_msg.type = WRITE;
@@ -1329,7 +1337,9 @@ PUBLIC int do_rdwt()
  * 
  * @return Zero if successful, otherwise -1.
  *****************************************************************************/
-PUBLIC int unlink(const char * pathname)
+//unlink is a syscall interface now. added by xw, 18/6/19
+// PUBLIC int unlink(const char * pathname)
+PUBLIC int real_unlink(const char * pathname)
 {
 	fs_msg.type   = UNLINK;
 
@@ -1543,7 +1553,9 @@ PUBLIC int do_unlink()
 }
 
 /// zcr defined
-PUBLIC int lseek(int fd, int offset, int whence)
+//lseek is a syscall interface now. added by xw, 18/6/18
+// PUBLIC int lseek(int fd, int offset, int whence)
+PUBLIC int real_lseek(int fd, int offset, int whence)
 {
 	fs_msg.FD = fd;
 	fs_msg.OFFSET = offset;
@@ -1589,4 +1601,44 @@ PUBLIC int do_lseek()
 	}
 	pcaller->task.filp[fd]->fd_pos = pos;
 	return pos;
+}
+
+//added by xw, 18/6/18
+PUBLIC int sys_open(void *uesp)
+{
+	return real_open(get_arg(uesp, 1),
+					 get_arg(uesp, 2));
+}
+
+PUBLIC int sys_close(void *uesp)
+{
+	return real_close(get_arg(uesp, 1));
+}
+
+PUBLIC int sys_read(void *uesp)
+{
+	return real_read(get_arg(uesp, 1),
+					 get_arg(uesp, 2),
+					 get_arg(uesp, 3));
+}
+
+PUBLIC int sys_write(void *uesp)
+{
+	return real_write(get_arg(uesp, 1),
+					  get_arg(uesp, 2),
+					  get_arg(uesp, 3));
+}
+
+PUBLIC int sys_lseek(void *uesp)
+{
+	return real_lseek(get_arg(uesp, 1),
+					  get_arg(uesp, 2),
+					  get_arg(uesp, 3));
+}
+//~xw, 18/6/18
+
+//added by xw, 18/6/19
+PUBLIC int sys_unlink(void *uesp)
+{
+	return real_unlink(get_arg(uesp, 1));
 }

@@ -65,7 +65,7 @@
 #define	AT_WINI_IRQ	14	/* at winchester */
 
 /* system call */
-#define NR_SYS_CALL     17
+#define NR_SYS_CALL     23	//last modified by xw, 18/6/19
 
 /*页表相关*/
 #define	PageTblNumAddr		0x500	//页表数量放在这个位置,必须与load.inc中一致					add by visual 2016.5.11

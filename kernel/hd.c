@@ -59,13 +59,6 @@ PUBLIC void init_hd()
 {
 	int i;
 
-	/* Get the number of drives from the BIOS data area */
-	u8 * pNrDrives = (u8*)(0x475);
-	// printf("NrDrives:%d.\n", *pNrDrives);
-	disp_str("NrDrives:");
-	disp_int(*pNrDrives);
-	disp_str("\n");
-
 	put_irq_handler(AT_WINI_IRQ, hd_handler);
 	enable_irq(CASCADE_IRQ);
 	enable_irq(AT_WINI_IRQ);
@@ -87,12 +80,16 @@ PUBLIC void init_hd()
  *****************************************************************************/
 PUBLIC void hd_open(int device)
 {
+	disp_str("Read hd information...  ");
+	
+	/* Get the number of drives from the BIOS data area */
+	u8 * pNrDrives = (u8*)(0x475);
+	// printf("NrDrives:%d.\n", *pNrDrives);
+	disp_str("NrDrives:");
+	disp_int(*pNrDrives);
+	disp_str("\n");
+	
 	int drive = DRV_OF_DEV(device);
-	/// zcr
-	// disp_str("drive: ");
-	// disp_int(drive);
-	// disp_str("\n");
-
 	hd_identify(drive);
 
 	if (hd_info[drive].open_cnt++ == 0) {
@@ -414,17 +411,17 @@ PUBLIC void print_identify_info(u16* hdinfo)
 	// printl("LBA supported: %s\n", (capabilities & 0x0200) ? "Yes" : "No");
 	disp_str("LBA supported:");
 	if((capabilities & 0x0200))
-		disp_str("YES") ;
-	else disp_str("NO");
-	disp_str("\n");
+		disp_str("YES  ") ;
+	else disp_str("NO  ");
+	// disp_str("\n");
 
 	int cmd_set_supported = hdinfo[83];
 	// printl("LBA48 supported: %s\n", (cmd_set_supported & 0x0400) ? "Yes" : "No");
 	disp_str("LBA48 supported:");
 	if((cmd_set_supported & 0x0400))
-		disp_str("YES");
-	else disp_str("NO");
-	disp_str("\n");
+		disp_str("YES  ");
+	else disp_str("NO  ");
+	// disp_str("\n");
 
 	int sectors = ((int)hdinfo[61] << 16) + hdinfo[60];
 	// printl("HD size: %dMB\n", sectors * 512 / 1000000);

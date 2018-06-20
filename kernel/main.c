@@ -36,7 +36,7 @@ PUBLIC int kernel_main()
 	}
 	disp_pos = 0;
 
-	disp_str("-----\"kernel_main\" begins-----\n");
+	disp_str("-----Kernel Initialization Begins-----\n");
 	kernel_initial = 1;	//kernel is in initial state. added by xw, 18/5/31
 	
 	init();//内存管理模块的初始化  add by liang 
@@ -74,7 +74,7 @@ PUBLIC int kernel_main()
 	
 	/* enable interrupt, we should read information of some devices by interrupt.
 	 * Note that you must have initialized all devices ready before you enable
-	 * interrupt.
+	 * interrupt. added by xw
 	 */
 	enable_int();
 	
@@ -83,7 +83,6 @@ PUBLIC int kernel_main()
 	coded by zcr on 2017.6.10. added by xw, 18/5/31
 	************************************************************************/
 	hd_open(MINOR(ROOT_DEV));
-	disp_str("HD Opened...    ");
 	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE)); //allocate fs buffer. added by xw, 18/6/15
 	init_fs();
 
@@ -95,7 +94,10 @@ PUBLIC int kernel_main()
 	 */
 	disable_int();
 	
+	disp_str("-----Processes Begin-----\n");
+	
 	/* linear address 0~8M will no longer be mapped to physical address 0~8M.
+	 * note that disp_xx can't work after this function is invoked until processes runs.
 	 * add by visual 2016.5.13; moved by xw, 18/5/30
 	 */
 	clear_kernel_pagepte_low();

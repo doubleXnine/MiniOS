@@ -24,6 +24,12 @@ _NR_yield			equ 13 ;	//added by xw, 17/12
 _NR_sleep			equ 14 ;	//added by xw, 17/12
 _NR_print_E			equ 15 ;	//added by xw, 18/4/27
 _NR_print_F			equ 16 ;	//added by xw, 18/4/27
+_NR_open			equ 17 ;	//added by xw, 18/6/18
+_NR_close			equ 18 ;	//added by xw, 18/6/18
+_NR_read			equ 19 ;	//added by xw, 18/6/18
+_NR_write			equ 20 ;	//added by xw, 18/6/18
+_NR_lseek			equ 21 ;	//added by xw, 18/6/18
+_NR_unlink			equ 22 ;	//added by xw, 18/6/18
 
 INT_VECTOR_SYS_CALL equ 0x90
 
@@ -41,10 +47,16 @@ global	pthread		;		//add by visual 2016.4.11
 global	udisp_int	;		//add by visual 2016.5.16
 global	udisp_str	;		//add by visual 2016.5.16
 global	exec		;		//add by visual 2016.5.16
-global  yield
-global  sleep
-global	print_E
-global	print_F
+global  yield		;		//added by xw
+global  sleep		;		//added by xw
+global	print_E		;		//added by xw
+global	print_F		;		//added by xw
+global	open		;		//added by xw, 18/6/18
+global	close		;		//added by xw, 18/6/18
+global	read		;		//added by xw, 18/6/18
+global	write		;		//added by xw, 18/6/18
+global	lseek		;		//added by xw, 18/6/18
+global	unlink		;		//added by xw, 18/6/19
 
 bits 32
 [section .text]
@@ -164,7 +176,7 @@ exec:
 	ret
 
 ; ====================================================================
-;                              yield
+;                              yield	//added by xw
 ; ====================================================================	
 yield:
 	mov ebx,[esp+4]
@@ -173,7 +185,7 @@ yield:
 	ret
 
 ; ====================================================================
-;                              sleep
+;                              sleep	//added by xw
 ; ====================================================================	
 sleep:
 	mov ebx,[esp+4]
@@ -182,7 +194,7 @@ sleep:
 	ret
 
 ; ====================================================================
-;                              print_E
+;                              print_E	//added by xw
 ; ====================================================================	
 print_E:
 	mov ebx,[esp+4]
@@ -191,10 +203,80 @@ print_E:
 	ret
 
 ; ====================================================================
-;                              print_F
+;                              print_F	//added by xw
 ; ====================================================================	
 print_F:
 	mov ebx,[esp+4]
 	mov	eax, _NR_print_F
 	int	INT_VECTOR_SYS_CALL
+	ret
+
+; ====================================================================
+;                              open		//added by xw, 18/6/18
+; ====================================================================	
+; open has more than one parameter, to pass them, we save the esp to ebx, 
+; and ebx will be passed into kernel as usual. In kernel, we use the saved
+; esp in user space to get the number of parameters and the values of them.
+open:
+	push 2			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_open
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
+	ret
+	
+; ====================================================================
+;                              close	//added by xw, 18/6/18
+; ====================================================================	
+; close has only one parameter, but we can still use this method.
+close:
+	push 1			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_close
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
+	ret
+
+; ====================================================================
+;                              read		//added by xw, 18/6/18
+; ====================================================================
+read:
+	push 3			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_read
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
+	ret
+
+; ====================================================================
+;                              write		//added by xw, 18/6/18
+; ====================================================================
+write:
+	push 3			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_write
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
+	ret
+
+; ====================================================================
+;                              lseek		//added by xw, 18/6/18
+; ====================================================================
+lseek:
+	push 3			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_lseek
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
+	ret
+	
+; ====================================================================
+;                              unlink		//added by xw, 18/6/18
+; ====================================================================
+unlink:
+	push 1			;the number of parameters
+	mov ebx, esp
+	mov	eax, _NR_unlink
+	int	INT_VECTOR_SYS_CALL
+	add esp, 4
 	ret

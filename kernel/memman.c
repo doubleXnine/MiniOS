@@ -94,9 +94,15 @@ void init()	//初始化
 			}
 		}
 	}
-	disp_str("**********");
+	
+	
+	//modified by xw, 18/6/18
+	// disp_str("**********");
+	disp_str("Memory Available:");
 	disp_int(memman_total(memman));	//显示初始总容量
-	disp_str("**********\n");
+	disp_str("\n");
+	// disp_str("**********\n");
+	//~xw
 	
 	return;
 	

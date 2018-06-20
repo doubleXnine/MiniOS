@@ -28,7 +28,7 @@ ARFLAGS		= rcs
 # CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector
 #modified by xw
 CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g
-CFLAGS_app	= -I include/ -m32 -c -fno-builtin -Wall -Wextra -Wfatal-errors -g
+CFLAGS_app	= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g
 
 # LDFLAGS		= -s -Ttext $(ENTRYPOINT)
 # LDFLAGS		= -m elf_i386 -s -Ttext $(ENTRYPOINT)
@@ -84,7 +84,7 @@ buildimg :
 	sudo cp -fv boot/loader.bin /mnt/floppy/
 	sudo cp -fv kernel.bin /mnt/floppy
 	sudo cp -fv init/init.bin /mnt/floppy
-	sudo cp -fv command/echo.bin /mnt/floppy
+#	sudo cp -fv command/echo.bin /mnt/floppy
 	sudo umount /mnt/floppy
 
 # compress 80m.img. added by xw, 18/6/17
