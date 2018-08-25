@@ -29,7 +29,7 @@ void pthread_test3()
 		i=10000;
 		while(--i){}
 	}
-}//*/
+}
 
 
 void pthread_test2()
@@ -54,7 +54,7 @@ void pthread_test2()
 		i=10000;
 		while(--i){}
 	}
-}//*/
+}
 
 void pthread_test1()
 {
@@ -68,7 +68,7 @@ void pthread_test1()
 		i=10000;
 		while(--i){}
 	}
-}//*/
+}
 
 /*======================================================================*
                           Syscall Pthread Test
@@ -128,6 +128,54 @@ void main(int arg,char *argv[])
 		udisp_str("init");
 		udisp_int(++global);
 		udisp_str(" ");
+		i=10000;
+		while(--i){}
+	}
+	return ;
+}
+//	*/
+
+/*======================================================================*
+                           Syscall Yield Test
+added by xw, 18/8/16
+ *======================================================================*/
+	/*
+void main(int arg,char *argv[])
+{
+	int i=0;
+	
+	while(1)
+	{
+		udisp_str("U( ");
+		yield();
+		udisp_str(") ");
+		i=10000;
+		while(--i){}
+	}
+	return ;
+}
+//	*/
+
+/*======================================================================*
+                           Syscall Sleep Test
+added by xw, 18/8/16
+ *======================================================================*/
+	/*
+void main(int arg,char *argv[])
+{
+	int i=0;
+	
+	while(1)
+	{
+		udisp_str("U( ");
+		udisp_str("[");
+		udisp_int(get_ticks());
+		udisp_str("] ");
+		sleep(5);
+		udisp_str("[");
+		udisp_int(get_ticks());
+		udisp_str("] ");
+		udisp_str(") ");
 		i=10000;
 		while(--i){}
 	}

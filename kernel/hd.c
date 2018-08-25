@@ -477,16 +477,32 @@ PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
 // 	hd_int_waiting_flag = 1;
 // }
 
+	/*
 PUBLIC void interrupt_wait()
 {
 	while(hd_int_waiting_flag) {
-		/* milli_delay invoke syscall get_ticks, so we can't use it.
-		 * for this scene, just do nothing is OK. modified by xw, 18/6/1
-		 */
+		// milli_delay invoke syscall get_ticks, so we can't use it here.
+		// for this scene, just do nothing is OK. modified by xw, 18/6/1
+		
 		//milli_delay(5);/// waiting for the harddisk interrupt.
 	}
 	hd_int_waiting_flag = 1;
 }
+//	*/
+
+//	/*
+//added by xw, 18/8/16
+PUBLIC void interrupt_wait()
+{
+	while(hd_int_waiting_flag){
+		//if(!kernel_initial){
+		//	sched();
+		//}
+	}
+	hd_int_waiting_flag = 1;
+}	
+//	*/
+
 
 /*****************************************************************************
  *                                waitfor

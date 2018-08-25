@@ -481,3 +481,79 @@ void initial()
 	}
 }
 //	*/
+
+/*======================================================================*
+                          File System Test 2
+to test interrupt_wait_sched() used in hd.c
+added by xw, 18/8/16
+ *======================================================================*/
+	/*
+void TestA()
+{
+	int i, j;
+	while (1)
+	{
+		disp_str("A ");
+		milli_delay(100);
+	}
+}
+
+void TestB()
+{	
+//	while (1) {}
+	
+	int fd, n;
+	const int rd_bytes = 4;
+	char bufr[4];
+	char filename[MAX_FILENAME_LEN+1] = "blah";
+
+	disp_str("(TestB)");
+	fd = open(filename, O_RDWR);
+	disp_str("       ");
+	disp_str("File opened. fd: ");
+	disp_int(fd);
+	disp_str("\n");
+
+	disp_str("(TestB)");
+	int lseek_status = lseek(fd, 1, SEEK_SET);
+	disp_str("Return value of lseek is: ");
+	disp_int(lseek_status);
+	disp_str("  \n");
+
+	disp_str("(TestB)");
+	n = read(fd, bufr, rd_bytes);
+	if(n != rd_bytes) {
+		disp_str("Read error\n");
+	}
+	bufr[n] = 0;
+	disp_str("Bytes read: ");
+	disp_str(bufr);
+	disp_str("\n");
+
+	close(fd);
+
+	while(1){
+
+	}
+}
+
+void TestC()
+{
+	int i, j;
+	while (1)
+	{
+		disp_str("C ");
+		milli_delay(100);
+	}
+}
+
+void initial()
+ {
+	int i, j;
+	while (1)
+	{
+		disp_str("I ");
+		milli_delay(100);
+	}
+ }
+//	*/
