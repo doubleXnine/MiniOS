@@ -283,7 +283,7 @@ void initial()
 added by xw, 18/4/27
  *======================================================================*/
 /* You should also enable the feature you want to test in init.c */
-//	/*
+	/*
 void TestA()
 {
 	int i, j;
@@ -338,7 +338,7 @@ void TestA()
 	char filename[MAX_FILENAME_LEN+1] = "blah";
 	const char bufw[] = "abcde";
 	const int rd_bytes = 4;
-	char bufr[4];
+	char bufr[5];
 
 	disp_str("(TestA)");
 	fd = open(filename, O_CREAT | O_RDWR);	
@@ -369,7 +369,7 @@ void TestB()
 	
 	int fd, n;
 	const int rd_bytes = 4;
-	char bufr[4];
+	char bufr[5];
 	char filename[MAX_FILENAME_LEN+1] = "blah";
 
 	disp_str("(TestB)");
@@ -404,11 +404,11 @@ void TestB()
 
 void TestC()
 {
-	while (1) {}
+	//while (1) {}
 	
 	int fd, n;
 	const int rd_bytes = 3;
-	char bufr[3];
+	char bufr[4];
 	char filename[MAX_FILENAME_LEN+1] = "blah";
 	
 	disp_str("(TestC)");
@@ -487,7 +487,7 @@ void initial()
 to test interrupt_wait_sched() used in hd.c
 added by xw, 18/8/16
  *======================================================================*/
-	/*
+//	/*
 void TestA()
 {
 	int i, j;
@@ -500,11 +500,11 @@ void TestA()
 
 void TestB()
 {	
-//	while (1) {}
+	//while (1) {}
 	
 	int fd, n;
-	const int rd_bytes = 4;
-	char bufr[4];
+	char bufr[5];
+	char bufw[5] = "mmnn";
 	char filename[MAX_FILENAME_LEN+1] = "blah";
 
 	disp_str("(TestB)");
@@ -515,17 +515,23 @@ void TestB()
 	disp_str("\n");
 
 	disp_str("(TestB)");
-	int lseek_status = lseek(fd, 1, SEEK_SET);
-	disp_str("Return value of lseek is: ");
-	disp_int(lseek_status);
-	disp_str("  \n");
-
+	lseek(fd, 1, SEEK_SET);
+	n = write(fd, bufw, 4);
+	if(n != 4) {
+		disp_str("Write error\n");
+	}
+	bufr[4] = 0;
+	disp_str("Bytes write: ");
+	disp_str(bufw);
+	disp_str("\n");
+	
 	disp_str("(TestB)");
-	n = read(fd, bufr, rd_bytes);
-	if(n != rd_bytes) {
+	lseek(fd, 1, SEEK_SET);
+	n = read(fd, bufr, 4);
+	if(n != 4) {
 		disp_str("Read error\n");
 	}
-	bufr[n] = 0;
+	bufr[4] = 0;
 	disp_str("Bytes read: ");
 	disp_str(bufr);
 	disp_str("\n");

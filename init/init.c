@@ -196,7 +196,7 @@ void main(int arg,char *argv[])
 	int i, n;
 	const int rd_bytes = 4;
 	char filename[MAX_FILENAME_LEN+1] = "blah";
-	char bufr[4];
+	char bufr[5];
 	const char bufw[] = "abcde";
 
 	udisp_str("\n(U)");

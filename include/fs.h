@@ -146,16 +146,18 @@ struct file_desc {
 				       proc2pid(p_proc_current),				\
 				       fsbuf);
 
-#define RD_SECT_ZCR(dev,sect_nr) rw_sector_zcr(DEV_READ, \
+//added by xw, 18/8/27
+#define RD_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_READ, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* read one sector */ \
 				       proc2pid(p_proc_current),/*TASK_A*/			\
 				       fsbuf);
-#define WR_SECT_ZCR(dev,sect_nr) rw_sector_zcr(DEV_WRITE, \
+#define WR_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_WRITE, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* write one sector */ \
 				       proc2pid(p_proc_current),				\
 				       fsbuf);
+//~xw
 #endif /* _ORANGES_FS_H_ */

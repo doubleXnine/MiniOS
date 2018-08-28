@@ -255,44 +255,11 @@ PUBLIC void mkfs()
  * 
  * @return Zero if success.
  *****************************************************************************/
-PUBLIC int rw_sector_zcr(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)
-{
-	MESSAGE driver_msg;
-	// disp_int(bytes); ///bytes才是真正的proc_nr! why...?
-	/// zcr debug
-	// if(io_type == DEV_WRITE) {
-	// 	disp_str("who call:");
-	// 	disp_int(bytes);
-	// 	disp_str("\n");
-	// }
-	driver_msg.type		= io_type;
-	driver_msg.DEVICE	= MINOR(dev);
-	driver_msg.POSITION	= pos;
-	// driver_msg.BUF		= buf;
-	driver_msg.BUF		= proc_nr;
-	driver_msg.CNT		= SECTOR_SIZE;	/// hu is: 512
-	// driver_msg.PROC_NR	= proc_nr;
-	driver_msg.PROC_NR	= bytes;
-	// assert(dd_map[MAJOR(dev)].driver_nr != INVALID_DRIVER);
-	// send_recv(BOTH, dd_map[MAJOR(dev)].driver_nr, &driver_msg);
-
-	/// replace the statement above.
-	// disp_int(proc_nr);
-	hd_rdwt(&driver_msg);
-	return 0;
-}
-
 /// zcr: change the "u64 pos" to "int pos"
-PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)
+PUBLIC int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)
 {
 	MESSAGE driver_msg;
-	// disp_int(bytes); ///bytes才是真正的proc_nr! why...?
-	/// zcr debug
-	// if(io_type == DEV_WRITE) {
-	// 	disp_str("who call:");
-	// 	disp_int(bytes);
-	// 	disp_str("\n");
-	// }
+	
 	driver_msg.type		= io_type;
 	driver_msg.DEVICE	= MINOR(dev);
 	//attention
@@ -309,6 +276,24 @@ PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void
 	hd_rdwt(&driver_msg);
 	return 0;
 }
+
+//added by xw, 18/8/27
+PUBLIC int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)
+{
+	MESSAGE driver_msg;
+	
+	driver_msg.type		= io_type;
+	driver_msg.DEVICE	= MINOR(dev);
+
+	driver_msg.POSITION	= pos;
+	driver_msg.CNT		= bytes;	/// hu is: 512
+	driver_msg.PROC_NR	= proc_nr;
+	driver_msg.BUF		= buf;
+	
+	hd_rdwt_sched(&driver_msg);
+	return 0;
+}
+//~xw
 
 // added by zcr from chapter9/e/lib/open.c and modified it.
 
@@ -327,16 +312,17 @@ PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void
 // PUBLIC int open(const char *pathname, int flags)
 PUBLIC int real_open(const char *pathname, int flags)
 {
-	// MESSAGE msg; 
+	//added by xw, 18/8/27
+	MESSAGE fs_msg;
 
 	fs_msg.type	= OPEN;
 	fs_msg.PATHNAME	= (void*)pathname;
 	fs_msg.FLAGS	= flags;
 	fs_msg.NAME_LEN	= strlen(pathname);
 	fs_msg.source = proc2pid(p_proc_current);
-	pcaller = p_proc_current;
 
-	int fd = do_open();
+	//int fd = do_open();	//modified by xw, 18/8/27
+	int fd = do_open(&fs_msg);
 
 	// send_recv(BOTH, TASK_FS, &msg);
 	// assert(msg.type == SYSCALL_RET);
@@ -353,7 +339,7 @@ PUBLIC int real_open(const char *pathname, int flags)
  * @return File descriptor if successful, otherwise a negative error code.
  *****************************************************************************/
 /// zcr modified.
-PUBLIC int do_open()
+PUBLIC int do_open(MESSAGE *fs_msg)
 {
 	/*caller_nr is the process number of the */
 	int fd = -1;		/* return value */
@@ -361,9 +347,9 @@ PUBLIC int do_open()
 	char pathname[MAX_PATH];
 
 	/* get parameters from the message */
-	int flags = fs_msg.FLAGS;	/* access mode */
-	int name_len = fs_msg.NAME_LEN;	/* length of filename */
-	int src = fs_msg.source;	/* caller proc nr. */
+	int flags = fs_msg->FLAGS;	/* access mode */
+	int name_len = fs_msg->NAME_LEN;	/* length of filename */
+	int src = fs_msg->source;	/* caller proc nr. */
 
 	/// zcr for debugging(the output is 0x1)
 	// disp_str("src is: ");
@@ -371,21 +357,21 @@ PUBLIC int do_open()
 	
 	// assert(name_len < MAX_PATH);
 	// phys_copy((void*)va2la(TASK_A, pathname), (void*)va2la(src, fs_msg.PATHNAME), name_len);
-	phys_copy((void*)va2la(src, pathname), (void*)va2la(src, fs_msg.PATHNAME), name_len);
+	phys_copy((void*)va2la(src, pathname), (void*)va2la(src, fs_msg->PATHNAME), name_len);
 	pathname[name_len] = 0;
 
 	/* find a free slot in PROCESS::filp[] */
 	int i;
 	for (i = 0; i < NR_FILES; i++) {
-		if (pcaller->task.filp[i] == 0) {
+		if (p_proc_current->task.filp[i] == 0) {
 			fd = i;
 			break;
 		}
 	}
 	if ((fd < 0) || (fd >= NR_FILES)) {
-		// panic("filp[] is full (PID:%d)", proc2pid(pcaller));
+		// panic("filp[] is full (PID:%d)", proc2pid(p_proc_current));
 		disp_str("filp[] is full (PID:");
-		disp_int(proc2pid(pcaller));
+		disp_int(proc2pid(p_proc_current));
 		disp_str(")\n");
 	}
 
@@ -394,9 +380,9 @@ PUBLIC int do_open()
 		if (f_desc_table[i].fd_inode == 0)
 			break;
 	if (i >= NR_FILE_DESC) {
-		// panic("f_desc_table[] is full (PID:%d)", proc2pid(pcaller));
+		// panic("f_desc_table[] is full (PID:%d)", proc2pid(p_proc_current));
 		disp_str("f_desc_table[] is full (PID:");
-		disp_int(proc2pid(pcaller));
+		disp_int(proc2pid(p_proc_current));
 		disp_str(")\n");
 	}
 
@@ -426,7 +412,7 @@ PUBLIC int do_open()
 		struct inode * dir_inode;
 		if (strip_path(filename, pathname, &dir_inode) != 0)
 			return -1;
-		pin = get_inode(dir_inode->i_dev, inode_nr);
+		pin = get_inode_sched(dir_inode->i_dev, inode_nr);	//modified by xw, 18/8/28
 		/// zcr 
 		disp_str("get the i-node of a file already exists.\n");
 	}
@@ -435,7 +421,7 @@ PUBLIC int do_open()
 
 	if (pin) {
 		/* connects proc with file_descriptor */
-		pcaller->task.filp[fd] = &f_desc_table[i];
+		p_proc_current->task.filp[fd] = &f_desc_table[i];
 
 		/* connects file_descriptor with inode */
 		f_desc_table[i].fd_inode = pin;
@@ -633,7 +619,7 @@ PUBLIC int search_file(char * path)
 	int m = 0;
 	struct dir_entry * pde;
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/27
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
 			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
@@ -839,6 +825,49 @@ PUBLIC struct inode * get_inode(int dev, int num)
 	return q;
 }
 
+//added by xw, 18/8/27
+PUBLIC struct inode * get_inode_sched(int dev, int num)
+{
+	if (num == 0)
+		return 0;
+
+	struct inode * p;
+	struct inode * q = 0;
+	for (p = &inode_table[0]; p < &inode_table[NR_INODE]; p++) {
+		if (p->i_cnt) {	/* not a free slot */
+			if ((p->i_dev == dev) && (p->i_num == num)) {
+				/* this is the inode we want */
+				p->i_cnt++;
+				return p;
+			}
+		}
+		else {		/* a free slot */
+			if (!q) /* q hasn't been assigned yet */
+				q = p; /* q <- the 1st free slot */
+		}
+	}
+
+	if (!q)
+		disp_str("Panic: the inode table is full");
+
+	q->i_dev = dev;
+	q->i_num = num;
+	q->i_cnt = 1;
+
+	struct super_block * sb = get_super_block(dev);
+	int blk_nr = 1 + 1 + sb->nr_imap_sects + sb->nr_smap_sects + ((num - 1) / (SECTOR_SIZE / INODE_SIZE));
+	RD_SECT_SCHED(dev, blk_nr);
+	struct inode * pinode =
+		(struct inode*)((u8*)fsbuf +
+				((num - 1 ) % (SECTOR_SIZE / INODE_SIZE))
+				 * INODE_SIZE);
+	q->i_mode = pinode->i_mode;
+	q->i_size = pinode->i_size;
+	q->i_start_sect = pinode->i_start_sect;
+	q->i_nr_sects = pinode->i_nr_sects;
+	return q;
+}
+
 /*****************************************************************************
  *                                put_inode
  *****************************************************************************/
@@ -869,7 +898,7 @@ PUBLIC void sync_inode(struct inode * p)
 	struct inode * pinode;
 	struct super_block * sb = get_super_block(p->i_dev);
 	int blk_nr = 1 + 1 + sb->nr_imap_sects + sb->nr_smap_sects + ((p->i_num - 1) / (SECTOR_SIZE / INODE_SIZE));
-	RD_SECT(p->i_dev, blk_nr);
+	RD_SECT_SCHED(p->i_dev, blk_nr);		//modified by xw, 18/8/28
 	pinode = (struct inode*)((u8*)fsbuf +
 				 (((p->i_num - 1) % (SECTOR_SIZE / INODE_SIZE))
 				  * INODE_SIZE));
@@ -877,7 +906,7 @@ PUBLIC void sync_inode(struct inode * p)
 	pinode->i_size = p->i_size;
 	pinode->i_start_sect = p->i_start_sect;
 	pinode->i_nr_sects = p->i_nr_sects;
-	WR_SECT(p->i_dev, blk_nr);
+	WR_SECT_SCHED(p->i_dev, blk_nr);		//modified by xw, 18/8/28
 }
 
 /// added by zcr (from ch9/e/fs/open.c)
@@ -895,7 +924,7 @@ PUBLIC void sync_inode(struct inode * p)
  *****************************************************************************/
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
 {
-	struct inode * new_inode = get_inode(dev, inode_nr);
+	struct inode * new_inode = get_inode_sched(dev, inode_nr);	//modified by xw, 18/8/28
 
 	new_inode->i_mode = I_REGULAR;
 	new_inode->i_size = 0;
@@ -940,7 +969,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 
 	int i, j;
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
 
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
@@ -964,7 +993,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 	strcpy(new_de->name, filename);
 
 	/* write dir block -- ROOT dir block */
-	WR_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+	WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);		//modified by xw, 18/8/28
 
 	/* update dir inode */
 	sync_inode(dir_inode);
@@ -1001,7 +1030,7 @@ PRIVATE int alloc_imap_bit(int dev)
 
 	for (i = 0; i < sb->nr_imap_sects; i++) {
 		// RD_SECT(dev, imap_blk0_nr + i);		/// zcr: place the result in fsbuf?
-		RD_SECT(dev, imap_blk0_nr + i);
+		RD_SECT_SCHED(dev, imap_blk0_nr + i);	//modified by xw, 18/8/28
 		/// zcr debug(output is 0x2, right.)
 		// disp_str("imap_blk0_nr + i: ");
 		// disp_int(imap_blk0_nr + i);
@@ -1036,7 +1065,7 @@ PRIVATE int alloc_imap_bit(int dev)
 			fsbuf[j] |= (1 << k);
 
 			/* write the bit to imap */
-			WR_SECT(dev, imap_blk0_nr + i);
+			WR_SECT_SCHED(dev, imap_blk0_nr + i);	//modified by xw, 18/8/28
 			break;
 		}
 
@@ -1075,7 +1104,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 
 	for (i = 0; i < sb->nr_smap_sects; i++) { /* smap_blk0_nr + i :
 						     current sect nr. */
-		RD_SECT(dev, smap_blk0_nr + i);
+		RD_SECT_SCHED(dev, smap_blk0_nr + i);	//modified by xw, 18/8/28
 
 		/* byte offset in current sect */
 		for (j = 0; j < SECTOR_SIZE && nr_sects_to_alloc > 0; j++) {
@@ -1097,7 +1126,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 		}
 
 		if (free_sect_nr) /* free bit found, write the bits to smap */
-			WR_SECT(dev, smap_blk0_nr + i);
+			WR_SECT_SCHED(dev, smap_blk0_nr + i);	//modified by xw, 18/8/28
 
 		if (nr_sects_to_alloc == 0)
 			break;
@@ -1139,10 +1168,10 @@ PUBLIC int do_close(int fd)
 	/// zcr debug
 	// disp_str("hh1 ");
 	// disp_int(fd);
-	put_inode(pcaller->task.filp[fd]->fd_inode);
+	put_inode(p_proc_current->task.filp[fd]->fd_inode);
 	// disp_str("hh2");
-	pcaller->task.filp[fd]->fd_inode = 0;
-	pcaller->task.filp[fd] = 0;
+	p_proc_current->task.filp[fd]->fd_inode = 0;
+	p_proc_current->task.filp[fd] = 0;
 
 	return 0;
 }
@@ -1166,14 +1195,17 @@ PUBLIC int do_close(int fd)
 // PUBLIC int read(int fd, void *buf, int count)
 PUBLIC int real_read(int fd, void *buf, int count)
 {
-	// MESSAGE msg;
+	//added by xw, 18/8/27
+	MESSAGE fs_msg;
+	PROCESS *p_proc_current;
+	
 	fs_msg.type = READ;
 	fs_msg.FD   = fd;
 	fs_msg.BUF  = buf;
 	fs_msg.CNT  = count;
 
 	// send_recv(BOTH, TASK_FS, &msg);
-	do_rdwt();
+	do_rdwt(&fs_msg);
 
 	return fs_msg.CNT;
 }
@@ -1195,7 +1227,9 @@ PUBLIC int real_read(int fd, void *buf, int count)
 // PUBLIC int write(int fd, const void *buf, int count)
 PUBLIC int real_write(int fd, const void *buf, int count)
 {
-	// MESSAGE msg;
+	//added by xw, 18/8/27
+	MESSAGE fs_msg;
+	
 	fs_msg.type = WRITE;
 	fs_msg.FD   = fd;
 	fs_msg.BUF  = (void*)buf;
@@ -1203,7 +1237,7 @@ PUBLIC int real_write(int fd, const void *buf, int count)
 
 	// send_recv(BOTH, TASK_FS, &msg);
 	/// zcr added
-	do_rdwt();
+	do_rdwt(&fs_msg);
 	
 	return fs_msg.CNT;
 }
@@ -1220,26 +1254,26 @@ PUBLIC int real_write(int fd, const void *buf, int count)
  * 
  * @return How many bytes have been read/written.
  *****************************************************************************/
-PUBLIC int do_rdwt()
+PUBLIC int do_rdwt(MESSAGE *fs_msg)
 {
-	int fd = fs_msg.FD;	/**< file descriptor. */
-	void * buf = fs_msg.BUF;/**< r/w buffer */
-	int len = fs_msg.CNT;	/**< r/w bytes */
+	int fd = fs_msg->FD;	/**< file descriptor. */
+	void * buf = fs_msg->BUF;/**< r/w buffer */
+	int len = fs_msg->CNT;	/**< r/w bytes */
 
-	int src = fs_msg.source;		/* caller proc nr. */
+	int src = fs_msg->source;		/* caller proc nr. */
 
-	if (!(pcaller->task.filp[fd]->fd_mode & O_RDWR))
+	if (!(p_proc_current->task.filp[fd]->fd_mode & O_RDWR))
 		return -1;
 
-	int pos = pcaller->task.filp[fd]->fd_pos;
+	int pos = p_proc_current->task.filp[fd]->fd_pos;
 
-	struct inode * pin = pcaller->task.filp[fd]->fd_inode;
+	struct inode * pin = p_proc_current->task.filp[fd]->fd_inode;
 
 	int imode = pin->i_mode & I_TYPE_MASK;
 
 	if (imode == I_CHAR_SPECIAL) {
-		int t = fs_msg.type == READ ? DEV_READ : DEV_WRITE;
-		fs_msg.type = t;
+		int t = fs_msg->type == READ ? DEV_READ : DEV_WRITE;
+		fs_msg->type = t;
 
 		int dev = pin->i_start_sect;
 		// assert(MAJOR(dev) == 4);
@@ -1248,24 +1282,24 @@ PUBLIC int do_rdwt()
 			disp_str("Error: MAJOR(dev) == 4\n");
 		}
 
-		fs_msg.DEVICE	= MINOR(dev);
-		fs_msg.BUF	= buf;
-		fs_msg.CNT	= len;
-		fs_msg.PROC_NR	= src;
+		fs_msg->DEVICE	= MINOR(dev);
+		fs_msg->BUF	= buf;
+		fs_msg->CNT	= len;
+		fs_msg->PROC_NR	= src;
 		// assert(dd_map[MAJOR(dev)].driver_nr != INVALID_DRIVER);
 		// send_recv(BOTH, dd_map[MAJOR(dev)].driver_nr, &fs_msg);
 		/// zcr added to replace the statement above
-		hd_rdwt(&fs_msg);
+		hd_rdwt_sched(&fs_msg);		//modified by xw, 18/8/27
 		// assert(fs_msg.CNT == len);
 
-		return fs_msg.CNT;
+		return fs_msg->CNT;
 	}
 	else {
 		// assert(pin->i_mode == I_REGULAR || pin->i_mode == I_DIRECTORY);
 		// assert((fs_msg.type == READ) || (fs_msg.type == WRITE));
 
 		int pos_end;
-		if (fs_msg.type == READ)
+		if (fs_msg->type == READ)
 			pos_end = min(pos + len, pin->i_size);
 		else		/* WRITE */
 			pos_end = min(pos + len, pin->i_nr_sects * SECTOR_SIZE);
@@ -1283,14 +1317,14 @@ PUBLIC int do_rdwt()
 		for (i = rw_sect_min; i <= rw_sect_max; i += chunk) {
 			/* read/write this amount of bytes every time */
 			int bytes = min(bytes_left, chunk * SECTOR_SIZE - off);
-			rw_sector(DEV_READ,
+			rw_sector_sched(DEV_READ,		//modified by xw, 18/8/27
 				  pin->i_dev,
 				  i * SECTOR_SIZE,
 				  chunk * SECTOR_SIZE,
 				  proc2pid(p_proc_current),	/// TASK_FS
 				  fsbuf);
 
-			if (fs_msg.type == READ) {
+			if (fs_msg->type == READ) {
 				phys_copy((void*)va2la(src, buf + bytes_rw),
 					  (void*)va2la(proc2pid(p_proc_current), fsbuf + off),
 					  bytes);
@@ -1300,7 +1334,7 @@ PUBLIC int do_rdwt()
 					  (void*)va2la(src, buf + bytes_rw),
 					  bytes);
 
-				rw_sector(DEV_WRITE,
+				rw_sector_sched(DEV_WRITE,		//modified by xw, 18/8/27
 					  pin->i_dev,
 					  i * SECTOR_SIZE,
 					  chunk * SECTOR_SIZE,
@@ -1309,13 +1343,13 @@ PUBLIC int do_rdwt()
 			}
 			off = 0;
 			bytes_rw += bytes;
-			pcaller->task.filp[fd]->fd_pos += bytes;
+			p_proc_current->task.filp[fd]->fd_pos += bytes;
 			bytes_left -= bytes;
 		}
 
-		if (pcaller->task.filp[fd]->fd_pos > pin->i_size) {
+		if (p_proc_current->task.filp[fd]->fd_pos > pin->i_size) {
 			/* update inode::size */
-			pin->i_size = pcaller->task.filp[fd]->fd_pos;
+			pin->i_size = p_proc_current->task.filp[fd]->fd_pos;
 
 			/* write the updated i-node back to disk */
 			sync_inode(pin);
@@ -1341,6 +1375,9 @@ PUBLIC int do_rdwt()
 // PUBLIC int unlink(const char * pathname)
 PUBLIC int real_unlink(const char * pathname)
 {
+	//added by xw, 18/8/27
+	MESSAGE fs_msg;
+	
 	fs_msg.type   = UNLINK;
 
 	fs_msg.PATHNAME	= (void*)pathname;
@@ -1350,7 +1387,7 @@ PUBLIC int real_unlink(const char * pathname)
 
 	// return fs_msg.RETVAL;
 	/// zcr added
-	return do_unlink();
+	return do_unlink(&fs_msg);
 }
 
 /// zcr copied from the ch9/h/fs/link.c and modified it
@@ -1365,16 +1402,16 @@ PUBLIC int real_unlink(const char * pathname)
  * 
  * @return On success, zero is returned.  On error, -1 is returned.
  *****************************************************************************/
-PUBLIC int do_unlink()
+PUBLIC int do_unlink(MESSAGE *fs_msg)
 {
 	char pathname[MAX_PATH];
 
 	/* get parameters from the message */
-	int name_len = fs_msg.NAME_LEN;	/* length of filename */
-	int src = fs_msg.source;	/* caller proc nr. */
+	int name_len = fs_msg->NAME_LEN;	/* length of filename */
+	int src = fs_msg->source;	/* caller proc nr. */
 	// assert(name_len < MAX_PATH);
 	phys_copy((void*)va2la(proc2pid(p_proc_current), pathname),
-		  (void*)va2la(src, fs_msg.PATHNAME),
+		  (void*)va2la(src, fs_msg->PATHNAME),
 		  name_len);
 	pathname[name_len] = 0;
 
@@ -1398,7 +1435,7 @@ PUBLIC int do_unlink()
 	if (strip_path(filename, pathname, &dir_inode) != 0)
 		return -1;
 
-	struct inode * pin = get_inode(dir_inode->i_dev, inode_nr);
+	struct inode * pin = get_inode_sched(dir_inode->i_dev, inode_nr);	//modified by xw, 18/8/28
 
 	if (pin->i_mode != I_REGULAR) { /* can only remove regular files */
 		// printl("cannot remove file %s, because it is not a regular file.\n", pathname);
@@ -1429,10 +1466,10 @@ PUBLIC int do_unlink()
 	int bit_idx = inode_nr % 8;
 	// assert(byte_idx < SECTOR_SIZE);	/* we have only one i-map sector */
 	/* read sector 2 (skip bootsect and superblk): */
-	RD_SECT(pin->i_dev, 2);
+	RD_SECT_SCHED(pin->i_dev, 2);		//modified by xw, 18/8/28
 	// assert(fsbuf[byte_idx % SECTOR_SIZE] & (1 << bit_idx));
 	fsbuf[byte_idx % SECTOR_SIZE] &= ~(1 << bit_idx);
-	WR_SECT(pin->i_dev, 2);
+	WR_SECT_SCHED(pin->i_dev, 2);	//modified by xw, 18/8/28
 
 	/**************************/
 	/* free the bits in s-map */
@@ -1458,7 +1495,7 @@ PUBLIC int do_unlink()
 	int s = 2  /* 2: bootsect + superblk */
 		+ sb->nr_imap_sects + byte_idx / SECTOR_SIZE;
 
-	RD_SECT(pin->i_dev, s);
+	RD_SECT_SCHED(pin->i_dev, s);		//modified by xw, 18/8/28
 
 	int i;
 	/* clear the first byte */
@@ -1473,8 +1510,8 @@ PUBLIC int do_unlink()
 	for (k = 0; k < byte_cnt; k++,i++,bits_left-=8) {
 		if (i == SECTOR_SIZE) {
 			i = 0;
-			WR_SECT(pin->i_dev, s);
-			RD_SECT(pin->i_dev, ++s);
+			WR_SECT_SCHED(pin->i_dev, s);		//modified by xw, 18/8/28
+			RD_SECT_SCHED(pin->i_dev, ++s);		//modified by xw, 18/8/28
 		}
 		// assert(fsbuf[i] == 0xFF);
 		fsbuf[i] = 0;
@@ -1483,13 +1520,13 @@ PUBLIC int do_unlink()
 	/* clear the last byte */
 	if (i == SECTOR_SIZE) {
 		i = 0;
-		WR_SECT(pin->i_dev, s);
-		RD_SECT(pin->i_dev, ++s);
+		WR_SECT_SCHED(pin->i_dev, s);			//modified by xw, 18/8/28
+		RD_SECT_SCHED(pin->i_dev, ++s);			//modified by xw, 18/8/28
 	}
 	unsigned char mask = ~((unsigned char)(~0) << bits_left);
 	// assert((fsbuf[i] & mask) == mask);
 	fsbuf[i] &= (~0) << bits_left;
-	WR_SECT(pin->i_dev, s);
+	WR_SECT_SCHED(pin->i_dev, s);				//modified by xw, 18/8/28
 
 	/***************************/
 	/* clear the i-node itself */
@@ -1519,7 +1556,7 @@ PUBLIC int do_unlink()
 	int dir_size = 0;
 
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
 
 		pde = (struct dir_entry *)fsbuf;
 		int j;
@@ -1530,7 +1567,7 @@ PUBLIC int do_unlink()
 			if (pde->inode_nr == inode_nr) {
 				/* pde->inode_nr = 0; */
 				memset(pde, 0, DIR_ENTRY_SIZE);
-				WR_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+				WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
 				flg = 1;
 				break;
 			}
@@ -1557,11 +1594,14 @@ PUBLIC int do_unlink()
 // PUBLIC int lseek(int fd, int offset, int whence)
 PUBLIC int real_lseek(int fd, int offset, int whence)
 {
+	//added by xw, 18/8/27
+	MESSAGE fs_msg;
+	
 	fs_msg.FD = fd;
 	fs_msg.OFFSET = offset;
 	fs_msg.WHENCE = whence;
 
-	return do_lseek();
+	return do_lseek(&fs_msg);
 }
 /// zcr copied from ch9/j/fs/open.c
 /*****************************************************************************
@@ -1573,14 +1613,14 @@ PUBLIC int real_lseek(int fd, int offset, int whence)
  * @return The new offset in bytes from the beginning of the file if successful,
  *         otherwise a negative number.
  *****************************************************************************/
-PUBLIC int do_lseek()
+PUBLIC int do_lseek(MESSAGE *fs_msg)
 {
-	int fd = fs_msg.FD;
-	int off = fs_msg.OFFSET;
-	int whence = fs_msg.WHENCE;
+	int fd = fs_msg->FD;
+	int off = fs_msg->OFFSET;
+	int whence = fs_msg->WHENCE;
 
-	int pos = pcaller->task.filp[fd]->fd_pos;
-	int f_size = pcaller->task.filp[fd]->fd_inode->i_size;
+	int pos = p_proc_current->task.filp[fd]->fd_pos;
+	int f_size = p_proc_current->task.filp[fd]->fd_inode->i_size;
 
 	switch (whence) {
 	case SEEK_SET:
@@ -1599,7 +1639,7 @@ PUBLIC int do_lseek()
 	if ((pos > f_size) || (pos < 0)) {
 		return -1;
 	}
-	pcaller->task.filp[fd]->fd_pos = pos;
+	p_proc_current->task.filp[fd]->fd_pos = pos;
 	return pos;
 }
 

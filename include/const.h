@@ -73,6 +73,7 @@
 /*线性地址描述*/	//edit by visual 2016.5.25
 #define	KernelSize			0x800000 			//内核的大小//add by visual 2016.5.10
 #define K_PHY2LIN(x)		((x)+0xC0000000)	//内核中物理地址转线性地址		//add by visual 2016.5.10
+#define K_LIN2PHY(x)		((x)-0xC0000000)	//added by xw, 18/8/27
 #define num_4B	0x4			//4B大小
 #define num_1K	0x400		//1k大小
 #define num_4K	0x1000		//4k大小

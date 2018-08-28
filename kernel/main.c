@@ -85,6 +85,7 @@ PUBLIC int kernel_main()
 	hd_open(MINOR(ROOT_DEV));
 	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE)); //allocate fs buffer. added by xw, 18/6/15
 	init_fs();
+	init_hd_queue(&hdque);	//init hd rdwt queue. added by xw, 18/8/27
 
 	/*************************************************************************
 	*第一个进程开始启动执行
@@ -444,6 +445,7 @@ PRIVATE int initialize_processes()
 	proc_table[0].task.ticks = proc_table[0].task.priority = 1;	
 	proc_table[1].task.ticks = proc_table[1].task.priority = 1;		
 	proc_table[2].task.ticks = proc_table[2].task.priority = 1;
+	proc_table[3].task.ticks = proc_table[3].task.priority = 1;	//added by xw, 18/8/27
 	proc_table[NR_K_PCBS].task.ticks = proc_table[NR_K_PCBS].task.priority = 1;
 	
 	/* When the first process begin running, a clock-interruption will happen immediately.

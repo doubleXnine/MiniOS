@@ -262,5 +262,25 @@ struct hd_info
 					      ((drv) << 4) |		\
 					      (lba_highest & 0xF) | 0xA0)
 
+// added by xw, 18/8/26
+typedef struct rdwt_info
+{
+	MESSAGE *msg;
+	void *kbuf;
+	PROCESS *proc;
+	struct rdwt_info *next;
+} RWInfo;
+
+typedef struct
+{
+	RWInfo *front;
+	RWInfo *rear;
+} HDQueue;
+
+EXTERN HDQueue hdque;
+
+PUBLIC void init_hd_queue(HDQueue *hdq);
+PUBLIC void hd_service();
+//~xw
 
 #endif /* _ORANGES_HD_H_ */

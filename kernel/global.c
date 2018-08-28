@@ -19,6 +19,7 @@
 #include "global.h"
 #include "proto.h"
 #include "fs_const.h"
+#include "hd.h"
 #include "fs.h"
 #include "fs_misc.h"
 
@@ -33,7 +34,8 @@ PUBLIC	PROCESS			proc_table[NR_PCBS];										//edit by visual 2016.4.5
 
 PUBLIC	TASK	task_table[NR_TASKS] = {{TestA, STACK_SIZE_TASK, "TestA"},			//edit by visual 2016.4.5	
 										{TestB, STACK_SIZE_TASK, "TestB"},	
-										{TestC, STACK_SIZE_TASK, "TestC"}};	
+										{TestC, STACK_SIZE_TASK, "TestC"},
+									    {hd_service, STACK_SIZE_TASK, "hd_service"}};	//added by xw, 18/8/27
 
 
 PUBLIC	irq_handler		irq_table[NR_IRQ];

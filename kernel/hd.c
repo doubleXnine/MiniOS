@@ -34,6 +34,7 @@ PRIVATE void	partition(int device, int style);
 PUBLIC  void	print_hdinfo(struct hd_info * hdi);
 PUBLIC  int		waitfor(int mask, int val, int timeout);
 PUBLIC  void	interrupt_wait();
+//PUBLIC	void	interrupt_wait_sched();		//added by xw, 18/8/26
 PUBLIC 	void	hd_identify(int drive);
 PUBLIC  void	print_identify_info(u16* hdinfo);
 PUBLIC	void 	hd_handler(int irq);
@@ -43,6 +44,8 @@ PRIVATE volatile int hd_int_waiting_flag;
 PRIVATE	u8 hd_status;
 PRIVATE	u8 hdbuf[SECTOR_SIZE * 2];
 PRIVATE	struct hd_info hd_info[1];
+
+PUBLIC HDQueue hdque;	//added by xw, 18/8/27
 
 #define	DRV_OF_DEV(dev) (dev <= MAX_PRIM ? \
 			 dev / NR_PRIM_PER_DRIVE : \
@@ -128,11 +131,9 @@ PUBLIC void hd_rdwt(MESSAGE * p)
 
 	u64 pos = p->POSITION;
 
-	/**
-	 * We only allow to R/W from a SECTOR boundary:
-	 */
+	//We only allow to R/W from a SECTOR boundary:
 
-	u32 sect_nr = (u32)(pos >> SECTOR_SIZE_SHIFT); /* pos / SECTOR_SIZE */
+	u32 sect_nr = (u32)(pos >> SECTOR_SIZE_SHIFT);	// pos / SECTOR_SIZE
 	int logidx = (p->DEVICE - MINOR_hd1a) % NR_SUB_PER_DRIVE;
 	sect_nr += p->DEVICE < MAX_PRIM ?
 		hd_info[drive].primary[p->DEVICE].base :
@@ -156,20 +157,153 @@ PUBLIC void hd_rdwt(MESSAGE * p)
 		if (p->type == DEV_READ) {
 			interrupt_wait();
 			port_read(REG_DATA, hdbuf, SECTOR_SIZE);
-			phys_copy(la, (void*)va2la(proc2pid(p_proc_current), hdbuf), bytes);
+			//hdbuf is in kernel space, no need to do address transferring. xw, 18/8/26
+			//phys_copy(la, (void*)va2la(proc2pid(p_proc_current), hdbuf), bytes);
+			phys_copy(la, hdbuf, bytes);
 		}
 		else {
 			if (!waitfor(STATUS_DRQ, STATUS_DRQ, HD_TIMEOUT))
 				disp_str("hd writing error.");
 
-			port_write(REG_DATA, la, bytes);
+			//modified by xw, 18/8/25
+			//port_write(REG_DATA, la, bytes);
+			phys_copy(hdbuf, la, bytes);
+			port_write(REG_DATA, hdbuf, SECTOR_SIZE);
 			interrupt_wait();
 		}
 		bytes_left -= SECTOR_SIZE;
 		la += SECTOR_SIZE;
 	}
-}															
+}
 
+//added by xw, 18/8/26
+PUBLIC void hd_service()
+{
+	RWInfo *rwinfo;
+	
+	while(1)
+	{
+		//the hd queue is not empty when out_hd_queue return 1.
+		while(out_hd_queue(&hdque, &rwinfo))
+		{
+			hd_rdwt_real(rwinfo);
+			rwinfo->proc->task.stat = READY;
+		}
+		yield();
+		
+		//disp_str("H ");
+		//milli_delay(100);
+	}
+	
+}
+
+PUBLIC void hd_rdwt_real(RWInfo *p)
+{
+	int drive = DRV_OF_DEV(p->msg->DEVICE);
+
+	u64 pos = p->msg->POSITION;
+
+	//We only allow to R/W from a SECTOR boundary:
+
+	u32 sect_nr = (u32)(pos >> SECTOR_SIZE_SHIFT);	// pos / SECTOR_SIZE
+	int logidx = (p->msg->DEVICE - MINOR_hd1a) % NR_SUB_PER_DRIVE;
+	sect_nr += p->msg->DEVICE < MAX_PRIM ?
+		hd_info[drive].primary[p->msg->DEVICE].base :
+		hd_info[drive].logical[logidx].base;
+
+	struct hd_cmd cmd;
+	cmd.features	= 0;
+	cmd.count	= (p->msg->CNT + SECTOR_SIZE - 1) / SECTOR_SIZE;
+	cmd.lba_low	= sect_nr & 0xFF;
+	cmd.lba_mid	= (sect_nr >>  8) & 0xFF;
+	cmd.lba_high	= (sect_nr >> 16) & 0xFF;
+	cmd.device	= MAKE_DEVICE_REG(1, drive, (sect_nr >> 24) & 0xF);
+	cmd.command	= (p->msg->type == DEV_READ) ? ATA_READ : ATA_WRITE;
+	hd_cmd_out(&cmd);
+
+	int bytes_left = p->msg->CNT;
+	void *la = p->kbuf;	//attention here!
+
+	while (bytes_left) {
+		int bytes = min(SECTOR_SIZE, bytes_left);
+		if (p->msg->type == DEV_READ) {
+			interrupt_wait();
+			port_read(REG_DATA, hdbuf, SECTOR_SIZE);
+			phys_copy(la, hdbuf, bytes);
+		}
+		else {
+			if (!waitfor(STATUS_DRQ, STATUS_DRQ, HD_TIMEOUT))
+				disp_str("hd writing error.");
+
+			phys_copy(hdbuf, la, bytes);
+			port_write(REG_DATA, hdbuf, SECTOR_SIZE);
+			interrupt_wait();
+		}
+		bytes_left -= SECTOR_SIZE;
+		la += SECTOR_SIZE;
+	}
+}
+
+void hd_rdwt_sched(MESSAGE *p)
+{
+	RWInfo rwinfo;
+	struct memfree hdque_buf;
+	int size = p->CNT;
+	void *buffer;
+	
+	buffer = (void*)K_PHY2LIN(sys_kmalloc(size));
+	rwinfo.msg = p;
+	rwinfo.kbuf = buffer;
+	rwinfo.proc = p_proc_current;
+	
+	if (p->type == DEV_READ) {
+		in_hd_queue(&hdque, &rwinfo);
+		p_proc_current->task.stat = SLEEPING;
+		sched();
+		phys_copy(p->BUF, buffer, p->CNT);
+	} else {
+		phys_copy(buffer, p->BUF, p->CNT);
+		in_hd_queue(&hdque, &rwinfo);
+		p_proc_current->task.channel = &hdque;
+		p_proc_current->task.stat = SLEEPING;
+		sched();
+	}
+	
+	hdque_buf.addr = K_LIN2PHY((u32)buffer);
+	hdque_buf.size = size;
+	sys_free(&hdque_buf);
+}
+
+void init_hd_queue(HDQueue *hdq)
+{
+	hdq->front = hdq->rear = NULL;
+}
+
+void in_hd_queue(HDQueue *hdq, RWInfo *p)
+{
+	p->next = NULL;
+	if(hdq->rear == NULL) {	//put in the first node
+		hdq->front = hdq->rear = p;
+	} else {
+		hdq->rear->next = p;
+		hdq->rear = p;
+	}
+}
+
+int out_hd_queue(HDQueue *hdq, RWInfo **p)
+{
+	if (hdq->rear == NULL)
+		return 0;	//empty
+	
+	*p = hdq->front;
+	if (hdq->front == hdq->rear) {	//put out the last node
+		hdq->front = hdq->rear = NULL;
+	} else {
+		hdq->front = hdq->front->next;
+	}
+	return 1;	//not empty
+}
+//~xw
 
 /*****************************************************************************
  *                                hd_ioctl
@@ -477,7 +611,7 @@ PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
 // 	hd_int_waiting_flag = 1;
 // }
 
-	/*
+//	/*
 PUBLIC void interrupt_wait()
 {
 	while(hd_int_waiting_flag) {
@@ -490,14 +624,12 @@ PUBLIC void interrupt_wait()
 }
 //	*/
 
-//	/*
+	/*
 //added by xw, 18/8/16
-PUBLIC void interrupt_wait()
+PUBLIC void interrupt_wait_sched()
 {
 	while(hd_int_waiting_flag){
-		//if(!kernel_initial){
-		//	sched();
-		//}
+		sched();
 	}
 	hd_int_waiting_flag = 1;
 }	

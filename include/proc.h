@@ -38,16 +38,15 @@
 #define P_STACKTOP 18 * 4
 
 /*总PCB表数和taskPCB表数*/	
-//modified by xw, 18/6/12
+//modified by xw, 18/8/27
 //the memory space we put kernel is 0x30400~0x6ffff, so we should limit kernel size
 // #define NR_PCBS	32		//add by visual 2016.4.5
 // #define NR_K_PCBS 10		//add by visual 2016.4.5
 #define NR_PCBS		12
-#define NR_K_PCBS	4
-//~xw
+#define NR_TASKS	4	//TestA~TestC + hd_service
+#define NR_K_PCBS	4	//no K_PCB is empty now
 
-/* Number of tasks */
-#define NR_TASKS	3
+//~xw
 
 #define NR_CPUS		1		//numbers of cpu. added by xw, 18/6/1
 #define	NR_FILES	64		//numbers of files a process can own. added by xw, 18/6/14
@@ -160,9 +159,9 @@ typedef struct s_task {
 //#define STACK_SIZE_TESTA	0x8000	//delete by visual 2016.4.5
 //#define STACK_SIZE_TESTB	0x8000
 //#define STACK_SIZE_TESTC	0x8000
-#define STACK_SIZE_TASK		0x1000	//add by visual 2016.4.5
 
-#define STACK_SIZE_TOTAL	(STACK_SIZE_TASK*NR_PCBS)	//edit by visual 2016.4.5
+#define STACK_SIZE_TASK		0x1000	//add by visual 2016.4.5
+//#define STACK_SIZE_TOTAL	(STACK_SIZE_TASK*NR_PCBS)	//edit by visual 2016.4.5
 
 //added by zcr
 #define proc2pid(x) (x - proc_table)
