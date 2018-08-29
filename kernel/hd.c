@@ -22,30 +22,30 @@
 #include "fs.h"
 #include "fs_misc.h"
 
-
-PUBLIC  void	init_hd();
-PUBLIC  void	hd_open(int device);
-PUBLIC  void	hd_close(int device);
-PUBLIC  void	hd_rdwt(MESSAGE * p);
-PUBLIC  void	hd_ioctl(MESSAGE * p);
-PUBLIC  void	hd_cmd_out(struct hd_cmd* cmd);
-PRIVATE void	get_part_table(int drive, int sect_nr, struct part_ent * entry);
-PRIVATE void	partition(int device, int style);
-PUBLIC  void	print_hdinfo(struct hd_info * hdi);
-PUBLIC  int		waitfor(int mask, int val, int timeout);
-PUBLIC  void	interrupt_wait();
-//PUBLIC	void	interrupt_wait_sched();		//added by xw, 18/8/26
-PUBLIC 	void	hd_identify(int drive);
-PUBLIC  void	print_identify_info(u16* hdinfo);
-PUBLIC	void 	hd_handler(int irq);
-PUBLIC	void	inform_int();
-
+//added by xw, 18/8/28
+PRIVATE HDQueue hdque;
 PRIVATE volatile int hd_int_waiting_flag;
 PRIVATE	u8 hd_status;
 PRIVATE	u8 hdbuf[SECTOR_SIZE * 2];
 PRIVATE	struct hd_info hd_info[1];
 
-PUBLIC HDQueue hdque;	//added by xw, 18/8/27
+PRIVATE void init_hd_queue(HDQueue *hdq);
+PRIVATE void in_hd_queue(HDQueue *hdq, RWInfo *p);
+PRIVATE int  out_hd_queue(HDQueue *hdq, RWInfo **p);
+PRIVATE void hd_rdwt_real(RWInfo *p);
+
+PRIVATE void get_part_table(int drive, int sect_nr, struct part_ent *entry);
+PRIVATE void partition(int device, int style);
+PRIVATE void print_hdinfo(struct hd_info *hdi);
+PRIVATE void hd_identify(int drive);
+PRIVATE void print_identify_info(u16 *hdinfo);
+PRIVATE void hd_cmd_out(struct hd_cmd *cmd);
+
+PRIVATE void inform_int();
+PRIVATE void interrupt_wait();
+PRIVATE void hd_handler(int irq);
+PRIVATE int  waitfor(int mask, int val, int timeout);
+//~xw
 
 #define	DRV_OF_DEV(dev) (dev <= MAX_PRIM ? \
 			 dev / NR_PRIM_PER_DRIVE : \
@@ -69,6 +69,9 @@ PUBLIC void init_hd()
 	for (i = 0; i < (sizeof(hd_info) / sizeof(hd_info[0])); i++)
 		memset(&hd_info[i], 0, sizeof(hd_info[0]));
 	hd_info[0].open_cnt = 0;
+	
+	//init hd rdwt queue. added by xw, 18/8/27
+	init_hd_queue(&hdque);
 }
 
 /*****************************************************************************
@@ -197,7 +200,7 @@ PUBLIC void hd_service()
 	
 }
 
-PUBLIC void hd_rdwt_real(RWInfo *p)
+PRIVATE void hd_rdwt_real(RWInfo *p)
 {
 	int drive = DRV_OF_DEV(p->msg->DEVICE);
 
@@ -244,7 +247,7 @@ PUBLIC void hd_rdwt_real(RWInfo *p)
 	}
 }
 
-void hd_rdwt_sched(MESSAGE *p)
+PUBLIC void hd_rdwt_sched(MESSAGE *p)
 {
 	RWInfo rwinfo;
 	struct memfree hdque_buf;
@@ -274,12 +277,12 @@ void hd_rdwt_sched(MESSAGE *p)
 	sys_free(&hdque_buf);
 }
 
-void init_hd_queue(HDQueue *hdq)
+PUBLIC void init_hd_queue(HDQueue *hdq)
 {
 	hdq->front = hdq->rear = NULL;
 }
 
-void in_hd_queue(HDQueue *hdq, RWInfo *p)
+PRIVATE void in_hd_queue(HDQueue *hdq, RWInfo *p)
 {
 	p->next = NULL;
 	if(hdq->rear == NULL) {	//put in the first node
@@ -290,7 +293,7 @@ void in_hd_queue(HDQueue *hdq, RWInfo *p)
 	}
 }
 
-int out_hd_queue(HDQueue *hdq, RWInfo **p)
+PRIVATE int out_hd_queue(HDQueue *hdq, RWInfo **p)
 {
 	if (hdq->rear == NULL)
 		return 0;	//empty
@@ -436,7 +439,7 @@ PRIVATE void partition(int device, int style)
  * 
  * @param hdi  Ptr to struct hd_info.
  *****************************************************************************/
-PUBLIC void print_hdinfo(struct hd_info * hdi)
+PRIVATE void print_hdinfo(struct hd_info * hdi)
 {
 	int i;
 	for (i = 0; i < NR_PART_PER_DRIVE + 1; i++) {
@@ -489,7 +492,7 @@ PUBLIC void print_hdinfo(struct hd_info * hdi)
  * 
  * @param drive  Drive Nr.
  *****************************************************************************/
-PUBLIC void hd_identify(int drive)
+PRIVATE void hd_identify(int drive)
 {
 	struct hd_cmd cmd;
 	cmd.device  = MAKE_DEVICE_REG(0, drive, 0);
@@ -515,7 +518,7 @@ PUBLIC void hd_identify(int drive)
  * 
  * @param hdinfo  The buffer read from the disk i/o port.
  *****************************************************************************/
-PUBLIC void print_identify_info(u16* hdinfo)
+PRIVATE void print_identify_info(u16* hdinfo)
 {
 	int i, k;
 	char s[64];
@@ -572,7 +575,7 @@ PUBLIC void print_identify_info(u16* hdinfo)
  * 
  * @param cmd  The command struct ptr.
  *****************************************************************************/
-PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
+PRIVATE void hd_cmd_out(struct hd_cmd* cmd)
 {
 	/**
 	 * For all commands, the host must first check if BSY=1,
@@ -612,7 +615,7 @@ PUBLIC void hd_cmd_out(struct hd_cmd* cmd)
 // }
 
 //	/*
-PUBLIC void interrupt_wait()
+PRIVATE void interrupt_wait()
 {
 	while(hd_int_waiting_flag) {
 		// milli_delay invoke syscall get_ticks, so we can't use it here.
@@ -648,7 +651,7 @@ PUBLIC void interrupt_wait_sched()
  * 
  * @return One if sucess, zero if timeout.
  *****************************************************************************/
-PUBLIC int waitfor(int mask, int val, int timeout)
+PRIVATE int waitfor(int mask, int val, int timeout)
 {
 	//we can't use syscall get_ticks before process run. modified by xw, 18/5/31
 	/*
@@ -676,7 +679,7 @@ PUBLIC int waitfor(int mask, int val, int timeout)
  * 
  * @param irq  IRQ nr of the disk interrupt.
  *****************************************************************************/
-PUBLIC void hd_handler(int irq)
+PRIVATE void hd_handler(int irq)
 {
 	/*
 	 * Interrupts are cleared when the host
@@ -703,7 +706,7 @@ PUBLIC void hd_handler(int irq)
 /*****************************************************************************
  *                                inform_int
  *****************************************************************************/
-PUBLIC void inform_int()
+PRIVATE void inform_int()
 {
 	hd_int_waiting_flag = 0;
 	return;

@@ -20,24 +20,62 @@
 // PUBLIC const int	FSBUF_SIZE	= 0x100000;
 // PUBLIC u8 * fsbuf = (u8*)0x600000;
 
-PUBLIC void mkfs();
+//MESSAGE	fs_msg;		//deleted by xw, 18/8/27
+//PROCESS* pcaller;		//deleted by xw, 18/8/27
 
+//added by xw, 18/8/28
+/* data */
+PRIVATE u8* fsbuf;
+PRIVATE struct inode* root_inode;
+PRIVATE struct file_desc f_desc_table[NR_FILE_DESC];
+PRIVATE struct inode inode_table[NR_INODE];
+PRIVATE struct super_block super_block[NR_SUPER_BLOCK];
+
+/* functions */
+PRIVATE void mkfs();
 PRIVATE void read_super_block(int dev);
+PRIVATE struct super_block* get_super_block(int dev);
 
-/// added by zcr from chap9/e/fs/open.c
-PRIVATE struct inode * create_file(char * path, int flags);
+PRIVATE int do_open(MESSAGE *fs_msg);
+PRIVATE int do_close(int fd);
+PRIVATE int do_lseek(MESSAGE *fs_msg);
+PRIVATE int do_rdwt(MESSAGE *fs_msg);
+PRIVATE int do_unlink(MESSAGE *fs_msg);
+
+PRIVATE int real_open(const char *pathname, int flags);
+PRIVATE int real_close(int fd);
+PRIVATE int real_read(int fd, void *buf, int count);
+PRIVATE int real_write(int fd, const void *buf, int count);
+PRIVATE int real_unlink(const char *pathname);
+PRIVATE int real_lseek(int fd, int offset, int whence);
+
+PRIVATE int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf);
+PRIVATE int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf);
+
+PRIVATE int strip_path(char * filename, const char * pathname, struct inode** ppinode);
+PRIVATE int search_file(char *path);
+PRIVATE struct inode* create_file(char *path, int flags);
+PRIVATE struct inode* get_inode(int dev, int num);
+PRIVATE struct inode* get_inode_sched(int dev, int num);
+PRIVATE struct inode* new_inode(int dev, int inode_nr, int start_sect);
+PRIVATE void put_inode(struct inode *pinode);
+PRIVATE void sync_inode(struct inode *p);
+PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
-PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
-PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename);
+
+PRIVATE int memcmp(const void *s1, const void *s2, int n);
+PRIVATE int strcmp(const char *s1, const char *s2);
+//~xw
 
 /// zcr added
 PUBLIC void init_fs() 
 {
-	/// added by zcr
 	disp_str("Initializing file system...  ");
+	
+	//allocate fs buffer. added by xw, 18/6/15
+	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE));
 
-	/// zcr copied from ch9/e/fs/main.c/init_fs()
 	int i;
 	for (i = 0; i < NR_FILE_DESC; i++)
 		memset(&f_desc_table[i], 0, sizeof(struct file_desc));
@@ -76,7 +114,7 @@ PUBLIC void init_fs()
  *          - Create the inodes of the files
  *          - Create `/', the root directory
  *****************************************************************************/
-PUBLIC void mkfs()
+PRIVATE void mkfs()
 {
 	MESSAGE driver_msg;
 	int i, j;
@@ -256,7 +294,7 @@ PUBLIC void mkfs()
  * @return Zero if success.
  *****************************************************************************/
 /// zcr: change the "u64 pos" to "int pos"
-PUBLIC int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)
+PRIVATE int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)
 {
 	MESSAGE driver_msg;
 	
@@ -278,7 +316,7 @@ PUBLIC int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void
 }
 
 //added by xw, 18/8/27
-PUBLIC int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)
+PRIVATE int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)
 {
 	MESSAGE driver_msg;
 	
@@ -310,7 +348,7 @@ PUBLIC int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr
  *****************************************************************************/
 //open is a syscall interface now. added by xw, 18/6/18
 // PUBLIC int open(const char *pathname, int flags)
-PUBLIC int real_open(const char *pathname, int flags)
+PRIVATE int real_open(const char *pathname, int flags)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
@@ -339,7 +377,7 @@ PUBLIC int real_open(const char *pathname, int flags)
  * @return File descriptor if successful, otherwise a negative error code.
  *****************************************************************************/
 /// zcr modified.
-PUBLIC int do_open(MESSAGE *fs_msg)
+PRIVATE int do_open(MESSAGE *fs_msg)
 {
 	/*caller_nr is the process number of the */
 	int fd = -1;		/* return value */
@@ -362,7 +400,9 @@ PUBLIC int do_open(MESSAGE *fs_msg)
 
 	/* find a free slot in PROCESS::filp[] */
 	int i;
-	for (i = 0; i < NR_FILES; i++) {
+	//for (i = 0; i < NR_FILES; i++) {
+	/* 0, 1, 2 are reserved for stdin, stdout, stderr. modified by xw, 18/8/28 */
+	for (i = 3; i < NR_FILES; i++) {
 		if (p_proc_current->task.filp[i] == 0) {
 			fd = i;
 			break;
@@ -531,7 +571,7 @@ PRIVATE struct inode * create_file(char * path, int flags)
  *          n bytes of s1 is found, respectively, to be less than, to match,
  *          or  be greater than the first n bytes of s2.
  *****************************************************************************/
-PUBLIC int memcmp(const void * s1, const void *s2, int n)
+PRIVATE int memcmp(const void * s1, const void *s2, int n)
 {
 	if ((s1 == 0) || (s2 == 0)) { /* for robustness */
 		return (s1 - s2);
@@ -561,7 +601,7 @@ PUBLIC int memcmp(const void * s1, const void *s2, int n)
  *          first n bytes thereof) is  found,  respectively,  to  be less than,
  *          to match, or be greater than s2.
  *****************************************************************************/
-PUBLIC int strcmp(const char * s1, const char *s2)
+PRIVATE int strcmp(const char * s1, const char *s2)
 {
 	if ((s1 == 0) || (s2 == 0)) { /* for robustness */
 		return (s1 - s2);
@@ -592,7 +632,7 @@ PUBLIC int strcmp(const char * s1, const char *s2)
  * @see open()
  * @see do_open()
  *****************************************************************************/
-PUBLIC int search_file(char * path)
+PRIVATE int search_file(char * path)
 {
 	int i, j;
 
@@ -664,7 +704,7 @@ PUBLIC int search_file(char * path)
  * 
  * @return Zero if success, otherwise the pathname is not valid.
  *****************************************************************************/
-PUBLIC int strip_path(char * filename, const char * pathname, struct inode** ppinode)
+PRIVATE int strip_path(char * filename, const char * pathname, struct inode** ppinode)
 {
 	const char * s = pathname;
 	char * t = filename;
@@ -758,7 +798,7 @@ PRIVATE void read_super_block(int dev)
 // }
 
 /// zcr(using hu's method.)
-PUBLIC struct super_block * get_super_block(int dev)
+PRIVATE struct super_block * get_super_block(int dev)
 {
 	struct super_block * sb = super_block;
 	for (; sb < &super_block[NR_SUPER_BLOCK]; sb++){
@@ -783,7 +823,7 @@ PUBLIC struct super_block * get_super_block(int dev)
  * 
  * @return The inode ptr requested.
  *****************************************************************************/
-PUBLIC struct inode * get_inode(int dev, int num)
+PRIVATE struct inode * get_inode(int dev, int num)
 {
 	if (num == 0)
 		return 0;
@@ -826,7 +866,7 @@ PUBLIC struct inode * get_inode(int dev, int num)
 }
 
 //added by xw, 18/8/27
-PUBLIC struct inode * get_inode_sched(int dev, int num)
+PRIVATE struct inode * get_inode_sched(int dev, int num)
 {
 	if (num == 0)
 		return 0;
@@ -878,7 +918,7 @@ PUBLIC struct inode * get_inode_sched(int dev, int num)
  * 
  * @param pinode I-node ptr.
  *****************************************************************************/
-PUBLIC void put_inode(struct inode * pinode)
+PRIVATE void put_inode(struct inode * pinode)
 {
 	// assert(pinode->i_cnt > 0);
 	pinode->i_cnt--;
@@ -893,7 +933,7 @@ PUBLIC void put_inode(struct inode * pinode)
  * 
  * @param p I-node ptr.
  *****************************************************************************/
-PUBLIC void sync_inode(struct inode * p)
+PRIVATE void sync_inode(struct inode * p)
 {
 	struct inode * pinode;
 	struct super_block * sb = get_super_block(p->i_dev);
@@ -1150,7 +1190,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
  *****************************************************************************/
 //close is a syscall interface now. added by xw, 18/6/18
 // PUBLIC int close(int fd)
-PUBLIC int real_close(int fd)
+PRIVATE int real_close(int fd)
 {
 	return do_close(fd);	// terrible(always returns 0)
 }
@@ -1163,7 +1203,7 @@ PUBLIC int real_close(int fd)
  * 
  * @return Zero if success.
  *****************************************************************************/
-PUBLIC int do_close(int fd)
+PRIVATE int do_close(int fd)
 {
 	/// zcr debug
 	// disp_str("hh1 ");
@@ -1193,7 +1233,7 @@ PUBLIC int do_close(int fd)
  *****************************************************************************/
 //read is a syscall interface now. added by xw, 18/6/18
 // PUBLIC int read(int fd, void *buf, int count)
-PUBLIC int real_read(int fd, void *buf, int count)
+PRIVATE int real_read(int fd, void *buf, int count)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
@@ -1225,7 +1265,7 @@ PUBLIC int real_read(int fd, void *buf, int count)
  *****************************************************************************/
 //write is a syscall interface now. added by xw, 18/6/18
 // PUBLIC int write(int fd, const void *buf, int count)
-PUBLIC int real_write(int fd, const void *buf, int count)
+PRIVATE int real_write(int fd, const void *buf, int count)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
@@ -1254,7 +1294,7 @@ PUBLIC int real_write(int fd, const void *buf, int count)
  * 
  * @return How many bytes have been read/written.
  *****************************************************************************/
-PUBLIC int do_rdwt(MESSAGE *fs_msg)
+PRIVATE int do_rdwt(MESSAGE *fs_msg)
 {
 	int fd = fs_msg->FD;	/**< file descriptor. */
 	void * buf = fs_msg->BUF;/**< r/w buffer */
@@ -1373,7 +1413,7 @@ PUBLIC int do_rdwt(MESSAGE *fs_msg)
  *****************************************************************************/
 //unlink is a syscall interface now. added by xw, 18/6/19
 // PUBLIC int unlink(const char * pathname)
-PUBLIC int real_unlink(const char * pathname)
+PRIVATE int real_unlink(const char * pathname)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
@@ -1402,7 +1442,7 @@ PUBLIC int real_unlink(const char * pathname)
  * 
  * @return On success, zero is returned.  On error, -1 is returned.
  *****************************************************************************/
-PUBLIC int do_unlink(MESSAGE *fs_msg)
+PRIVATE int do_unlink(MESSAGE *fs_msg)
 {
 	char pathname[MAX_PATH];
 
@@ -1592,7 +1632,7 @@ PUBLIC int do_unlink(MESSAGE *fs_msg)
 /// zcr defined
 //lseek is a syscall interface now. added by xw, 18/6/18
 // PUBLIC int lseek(int fd, int offset, int whence)
-PUBLIC int real_lseek(int fd, int offset, int whence)
+PRIVATE int real_lseek(int fd, int offset, int whence)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
@@ -1613,7 +1653,7 @@ PUBLIC int real_lseek(int fd, int offset, int whence)
  * @return The new offset in bytes from the beginning of the file if successful,
  *         otherwise a negative number.
  *****************************************************************************/
-PUBLIC int do_lseek(MESSAGE *fs_msg)
+PRIVATE int do_lseek(MESSAGE *fs_msg)
 {
 	int fd = fs_msg->FD;
 	int off = fs_msg->OFFSET;

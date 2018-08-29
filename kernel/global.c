@@ -21,7 +21,6 @@
 #include "fs_const.h"
 #include "hd.h"
 #include "fs.h"
-#include "fs_misc.h"
 
 /* save the execution environment of each cpu, which doesn't belong to any process.
  * added by xw, 18/6/1

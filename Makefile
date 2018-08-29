@@ -27,8 +27,8 @@ ARFLAGS		= rcs
 # CFLAGS		= -I include/ -c -fno-builtin -fno-stack-protector
 # CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector
 #modified by xw
-CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g
-CFLAGS_app	= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g
+CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -g
+CFLAGS_app	= -I include/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -g
 
 # LDFLAGS		= -s -Ttext $(ENTRYPOINT)
 # LDFLAGS		= -m elf_i386 -s -Ttext $(ENTRYPOINT)

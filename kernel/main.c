@@ -15,7 +15,6 @@
 #include "fs_const.h"
 #include "hd.h"
 #include "fs.h"
-#include "fs_misc.h"
 
 PRIVATE int initialize_processes();	//added by xw, 18/5/26
 PRIVATE int initialize_cpus();		//added by xw, 18/6/2
@@ -69,7 +68,7 @@ PUBLIC int kernel_main()
     put_irq_handler(CLOCK_IRQ, clock_handler); /* 设定时钟中断处理程序 */
     enable_irq(CLOCK_IRQ);                     /* 让8259A可以接收时钟中断 */	
 	
-	/* initialize hard_disk-irq */
+	/* initialize hd-irq and hd rdwt queue */
 	init_hd();
 	
 	/* enable interrupt, we should read information of some devices by interrupt.
@@ -83,9 +82,7 @@ PUBLIC int kernel_main()
 	coded by zcr on 2017.6.10. added by xw, 18/5/31
 	************************************************************************/
 	hd_open(MINOR(ROOT_DEV));
-	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE)); //allocate fs buffer. added by xw, 18/6/15
 	init_fs();
-	init_hd_queue(&hdque);	//init hd rdwt queue. added by xw, 18/8/27
 
 	/*************************************************************************
 	*第一个进程开始启动执行

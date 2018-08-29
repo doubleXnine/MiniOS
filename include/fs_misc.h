@@ -7,49 +7,147 @@
 #ifndef	FS_MISC_H
 #define	FS_MISC_H
 
-/* APIs of file operation */
-#define	MAX_PATH	128
-#define	O_CREAT		1
-#define	O_RDWR		2
-#define SEEK_SET	1
-#define SEEK_CUR	2
-#define SEEK_END	3
+/**
+ * @struct dev_drv_map fs.h "include/sys/fs.h"
+ * @brief  The Device_nr.\ - Driver_nr.\ MAP.
+ */
+struct dev_drv_map {
+	int driver_nr; /**< The proc nr.\ of the device driver. */
+};
 
-PUBLIC int open(const char *pathname, int flags);
-PUBLIC int close(int fd);
-PUBLIC int read(int fd, void *buf, int count);
-PUBLIC int write(int fd, const void *buf, int count);
-PUBLIC int lseek(int fd, int offset, int whence);
-PUBLIC int unlink(const char *pathname);
+/**
+ * @def   MAGIC_V1
+ * @brief Magic number of FS v1.0
+ */
+#define	MAGIC_V1	0x111
 
-//added by xw, 18/6/18
-PUBLIC int sys_open(void *uesp);
-PUBLIC int sys_close(void *uesp);
-PUBLIC int sys_read(void *uesp);
-PUBLIC int sys_write(void *uesp);
-PUBLIC int sys_lseek(void *uesp);
+/**
+ * @struct super_block fs.h "include/fs.h"
+ * @brief  The 2nd sector of the FS
+ *
+ * Remember to change SUPER_BLOCK_SIZE if the members are changed.
+ */
+struct super_block {
+	u32	magic;		  /**< Magic number */
+	u32	nr_inodes;	  /**< How many inodes */
+	u32	nr_sects;	  /**< How many sectors */
+	u32	nr_imap_sects;	  /**< How many inode-map sectors */
+	u32	nr_smap_sects;	  /**< How many sector-map sectors */
+	u32	n_1st_sect;	  /**< Number of the 1st data sector */
+	u32	nr_inode_sects;   /**< How many inode sectors */
+	u32	root_inode;       /**< Inode nr of root directory */
+	u32	inode_size;       /**< INODE_SIZE */
+	u32	inode_isize_off;  /**< Offset of `struct inode::i_size' */
+	u32	inode_start_off;  /**< Offset of `struct inode::i_start_sect' */
+	u32	dir_ent_size;     /**< DIR_ENTRY_SIZE */
+	u32	dir_ent_inode_off;/**< Offset of `struct dir_entry::inode_nr' */
+	u32	dir_ent_fname_off;/**< Offset of `struct dir_entry::name' */
+
+	/*
+	 * the following item(s) are only present in memory
+	 */
+	int	sb_dev; 	/**< the super block's home device */
+};
+
+/**
+ * @def   SUPER_BLOCK_SIZE
+ * @brief The size of super block \b in \b the \b device.
+ *
+ * Note that this is the size of the struct in the device, \b NOT in memory.
+ * The size in memory is larger because of some more members.
+ */
+#define	SUPER_BLOCK_SIZE	56
+
+/**
+ * @struct inode
+ * @brief  i-node
+ *
+ * The \c start_sect and\c nr_sects locate the file in the device,
+ * and the size show how many bytes is used.
+ * If <tt> size < (nr_sects * SECTOR_SIZE) </tt>, the rest bytes
+ * are wasted and reserved for later writing.
+ *
+ * \b NOTE: Remember to change INODE_SIZE if the members are changed
+ */
+struct inode {
+	u32	i_mode;		/**< Accsess mode */
+	u32	i_size;		/**< File size */
+	u32	i_start_sect;	/**< The first sector of the data */
+	u32	i_nr_sects;	/**< How many sectors the file occupies */
+	u8	_unused[16];	/**< Stuff for alignment */
+
+	/* the following items are only present in memory */
+	int	i_dev;
+	int	i_cnt;		/**< How many procs share this inode  */
+	int	i_num;		/**< inode nr.  */
+};
+
+/**
+ * @def   INODE_SIZE
+ * @brief The size of i-node stored \b in \b the \b device.
+ *
+ * Note that this is the size of the struct in the device, \b NOT in memory.
+ * The size in memory is larger because of some more members.
+ */
+#define	INODE_SIZE	32
+
+/**
+ * @struct dir_entry
+ * @brief  Directory Entry
+ */
+struct dir_entry {
+	int	inode_nr;		/**< inode nr. */
+	char name[MAX_FILENAME_LEN];	/**< Filename */
+};
+
+/**
+ * @def   DIR_ENTRY_SIZE
+ * @brief The size of directory entry in the device.
+ *
+ * It is as same as the size in memory.
+ */
+#define	DIR_ENTRY_SIZE	sizeof(struct dir_entry)
+
+/**
+ * @struct file_desc
+ * @brief  File Descriptor
+ */
+struct file_desc {
+	int		fd_mode;	/**< R or W */
+	int		fd_pos;		/**< Current position for R/W. */
+	struct inode*	fd_inode;	/**< Ptr to the i-node */
+};
+
+
+/**
+ * Since all invocations of `rw_sector()' in FS look similar (most of the
+ * params are the same), we use this macro to make code more readable.
+ */
+#define RD_SECT(dev,sect_nr) rw_sector(DEV_READ, \
+				       dev,				\
+				       (sect_nr) * SECTOR_SIZE,		\
+				       SECTOR_SIZE, /* read one sector */ \
+				       proc2pid(p_proc_current),/*TASK_A*/			\
+				       fsbuf);
+#define WR_SECT(dev,sect_nr) rw_sector(DEV_WRITE, \
+				       dev,				\
+				       (sect_nr) * SECTOR_SIZE,		\
+				       SECTOR_SIZE, /* write one sector */ \
+				       proc2pid(p_proc_current),				\
+				       fsbuf);
+
+//added by xw, 18/8/27
+#define RD_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_READ, \
+				       dev,				\
+				       (sect_nr) * SECTOR_SIZE,		\
+				       SECTOR_SIZE, /* read one sector */ \
+				       proc2pid(p_proc_current),/*TASK_A*/			\
+				       fsbuf);
+#define WR_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_WRITE, \
+				       dev,				\
+				       (sect_nr) * SECTOR_SIZE,		\
+				       SECTOR_SIZE, /* write one sector */ \
+				       proc2pid(p_proc_current),				\
+				       fsbuf);
 //~xw
-PUBLIC int sys_unlink(void *uesp);	//added by xw, 18/6/19
-
-/* data of filesystem */
-EXTERN	u8* fsbuf;
-//EXTERN	MESSAGE	fs_msg;		//deleted by xw, 18/8/27
-//EXTERN	PROCESS* pcaller;	//deleted by xw, 18/8/27
-EXTERN	struct inode* root_inode;
-EXTERN	struct file_desc f_desc_table[NR_FILE_DESC];
-EXTERN	struct inode inode_table[NR_INODE];
-EXTERN	struct super_block super_block[NR_SUPER_BLOCK];
-
-/* declaration of functions in fs.c */
-PUBLIC int do_open();
-PUBLIC int do_close(int fd);
-PUBLIC int do_stat();
-PUBLIC int search_file(char * path);
-
-PUBLIC void put_inode(struct inode * pinode);
-PUBLIC void sync_inode(struct inode * p);
-PUBLIC struct inode* get_inode(int dev, int num);
-PUBLIC struct inode* get_inode_sched(int dev, int num);	//modified by xw, 18/8/28
-PUBLIC struct super_block*	get_super_block(int dev);
-
 #endif /* FS_MISC_H */

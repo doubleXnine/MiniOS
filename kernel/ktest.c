@@ -10,10 +10,7 @@
 #include "proc.h"
 #include "global.h"
 #include "proto.h"
-#include "fs_const.h"
-#include "hd.h"
 #include "fs.h"
-#include "fs_misc.h"
 
 /*======================================================================*
                          Interrupt Handling Test
@@ -283,7 +280,7 @@ void initial()
 added by xw, 18/4/27
  *======================================================================*/
 /* You should also enable the feature you want to test in init.c */
-	/*
+//	/*
 void TestA()
 {
 	int i, j;
@@ -487,7 +484,7 @@ void initial()
 to test interrupt_wait_sched() used in hd.c
 added by xw, 18/8/16
  *======================================================================*/
-//	/*
+	/*
 void TestA()
 {
 	int i, j;

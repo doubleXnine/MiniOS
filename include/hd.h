@@ -277,10 +277,14 @@ typedef struct
 	RWInfo *rear;
 } HDQueue;
 
-EXTERN HDQueue hdque;
-
-PUBLIC void init_hd_queue(HDQueue *hdq);
+PUBLIC void init_hd();
+PUBLIC void hd_open(int device);
+PUBLIC void hd_close(int device);
 PUBLIC void hd_service();
+
+PUBLIC void hd_rdwt(MESSAGE *p);
+PUBLIC void hd_rdwt_sched(MESSAGE *p);
+PUBLIC void hd_ioctl(MESSAGE *p);
 //~xw
 
 #endif /* _ORANGES_HD_H_ */

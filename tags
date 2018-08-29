@@ -14,8 +14,8 @@ ATA_IDENTIFY	include/hd.h	257;"	d
 ATA_READ	include/hd.h	258;"	d
 ATA_WRITE	include/hd.h	259;"	d
 AT_WINI_IRQ	include/const.h	65;"	d
-ArgLinBase	include/const.h	92;"	d
-ArgLinLimitMAX	include/const.h	93;"	d
+ArgLinBase	include/const.h	93;"	d
+ArgLinLimitMAX	include/const.h	94;"	d
 BUF	include/fs_const.h	24;"	d
 BaseOfEchoFilePhyAddr	kernel/file.c	15;"	d	file:
 BaseOfStack	boot/boot.asm	/^BaseOfStack		equ	0100h	; 调试状态下堆栈基地址(栈底, 从这个位置向低地址生长)$/;"	d
@@ -24,10 +24,10 @@ BaseOfStack	boot/loader.asm	/^BaseOfStack	equ	0100h$/;"	d
 BootMessage	boot/boot.asm	/^BootMessage:		db	"Booting  "; 9字节, 不够则用空格补齐. 序号 0$/;"	d
 CASCADE_IRQ	include/const.h	58;"	d
 CC	Makefile	/^CC		= gcc$/;"	m
-CFLAGS	Makefile	/^CFLAGS		= -I include\/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g$/;"	m
-CFLAGS_app	Makefile	/^CFLAGS_app	= -I include\/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -Wfatal-errors -g$/;"	m
+CFLAGS	Makefile	/^CFLAGS		= -I include\/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -g$/;"	m
+CFLAGS_app	Makefile	/^CFLAGS_app	= -I include\/ -m32 -c -fno-builtin -fno-stack-protector -Wall -Wextra -g$/;"	m
 CLOCK_IRQ	include/const.h	56;"	d
-CLOSE	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+CLOSE	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 CNT	include/fs_const.h	19;"	d
 CSREG	include/proc.h	34;"	d
 DASM	Makefile	/^DASM	= ndisasm$/;"	m
@@ -56,20 +56,20 @@ DESCRIPTOR	include/protect.h	/^}DESCRIPTOR;$/;"	t	typeref:struct:s_descriptor
 DEVICE	include/fs_const.h	22;"	d
 DEV_CDROM	include/fs_const.h	44;"	d
 DEV_CHAR_TTY	include/fs_const.h	46;"	d
-DEV_CLOSE	include/fs_misc.h	/^	DEV_CLOSE,$/;"	e	enum:msgtype
+DEV_CLOSE	include/type.h	/^	DEV_CLOSE,$/;"	e	enum:msgtype
 DEV_FLOPPY	include/fs_const.h	43;"	d
 DEV_HD	include/fs_const.h	45;"	d
-DEV_IOCTL	include/fs_misc.h	/^	DEV_IOCTL$/;"	e	enum:msgtype
-DEV_OPEN	include/fs_misc.h	/^	DEV_OPEN = 1001,$/;"	e	enum:msgtype
-DEV_READ	include/fs_misc.h	/^	DEV_READ,$/;"	e	enum:msgtype
+DEV_IOCTL	include/type.h	/^	DEV_IOCTL$/;"	e	enum:msgtype
+DEV_OPEN	include/type.h	/^	DEV_OPEN = 1001,$/;"	e	enum:msgtype
+DEV_READ	include/type.h	/^	DEV_READ,$/;"	e	enum:msgtype
 DEV_SCSI	include/fs_const.h	47;"	d
-DEV_WRITE	include/fs_misc.h	/^	DEV_WRITE,$/;"	e	enum:msgtype
+DEV_WRITE	include/type.h	/^	DEV_WRITE,$/;"	e	enum:msgtype
 DIOCTL_GET_GEO	include/fs_const.h	34;"	d
-DIR_ENTRY_SIZE	include/fs.h	119;"	d
-DRV_OF_DEV	kernel/hd.c	48;"	d	file:
+DIR_ENTRY_SIZE	include/fs_misc.h	116;"	d
+DRV_OF_DEV	kernel/hd.c	50;"	d	file:
 DSREG	include/proc.h	23;"	d
-DataLinBase	include/const.h	82;"	d
-DataLinLimitMAX	include/const.h	83;"	d
+DataLinBase	include/const.h	83;"	d
+DataLinLimitMAX	include/const.h	84;"	d
 DispAL	boot/loader.asm	/^DispAL:$/;"	l
 DispEchoSize	boot/loader.asm	/^DispEchoSize:$/;"	l
 DispInt	boot/loader.asm	/^DispInt:$/;"	l
@@ -109,9 +109,9 @@ EXTERN	kernel/global.c	14;"	d	file:
 EXTERN	kernel/global.c	15;"	d	file:
 EXT_PART	include/fs_const.h	86;"	d
 EchoFileName	boot/loader.asm	/^EchoFileName		db	"INIT    BIN", 0	;add by liang 2016.04.20  ;edit by visual 2016.5.16$/;"	d
-Elf32_Ehdr	include/elf.h	/^}Elf32_Ehdr;$/;"	t	typeref:struct:__anon4
-Elf32_Phdr	include/elf.h	/^}Elf32_Phdr;$/;"	t	typeref:struct:__anon5
-Elf32_Shdr	include/elf.h	/^}Elf32_Shdr;$/;"	t	typeref:struct:__anon6
+Elf32_Ehdr	include/elf.h	/^}Elf32_Ehdr;$/;"	t	typeref:struct:__anon2
+Elf32_Phdr	include/elf.h	/^}Elf32_Phdr;$/;"	t	typeref:struct:__anon3
+Elf32_Shdr	include/elf.h	/^}Elf32_Shdr;$/;"	t	typeref:struct:__anon4
 FALSE	include/const.h	24;"	d
 FD	include/fs_const.h	15;"	d
 FLAGS	include/fs_const.h	17;"	d
@@ -120,22 +120,23 @@ FMIBuff	include/memman.h	11;"	d
 FREEINFO	include/memman.h	/^struct FREEINFO{$/;"	s
 FSBUF_SIZE	include/fs_const.h	107;"	d
 FSREG	include/proc.h	21;"	d
+FS_H	include/fs.h	9;"	d
 FS_MISC_H	include/fs_misc.h	8;"	d
 GATE	include/protect.h	/^}GATE;$/;"	t	typeref:struct:s_gate
 GDBBIN	Makefile	/^GDBBIN = kernel.gdb.bin init\/init.gdb.bin$/;"	m
 GDT_SIZE	include/const.h	27;"	d
-GET_TICKS	include/fs_misc.h	/^	GET_TICKS,$/;"	e	enum:msgtype
+GET_TICKS	include/type.h	/^	GET_TICKS,$/;"	e	enum:msgtype
 GSREG	include/proc.h	20;"	d
 GdtLen	boot/loader.asm	/^GdtLen		equ	$ - LABEL_GDT$/;"	d
 GdtPtr	boot/loader.asm	/^GdtPtr		dw	GdtLen - 1				; 段界限$/;"	d
 GetFATEntry	boot/boot.asm	/^GetFATEntry:$/;"	l
 GetFATEntry	boot/loader.asm	/^GetFATEntry:$/;"	l
-HARD_INT	include/fs_misc.h	/^	HARD_INT = 1,$/;"	e	enum:msgtype
-HDQueue	include/hd.h	/^} HDQueue;$/;"	t	typeref:struct:__anon3
+HARD_INT	include/type.h	/^	HARD_INT = 1,$/;"	e	enum:msgtype
+HDQueue	include/hd.h	/^} HDQueue;$/;"	t	typeref:struct:__anon1
 HD_TIMEOUT	include/hd.h	255;"	d
 HZ	include/const.h	52;"	d
-HeapLinBase	include/const.h	88;"	d
-HeapLinLimitMAX	include/const.h	89;"	d
+HeapLinBase	include/const.h	89;"	d
+HeapLinLimitMAX	include/const.h	90;"	d
 IDLE	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	e	enum:proc_stat
 IDT_SIZE	include/const.h	28;"	d
 INDEX_DUMMY	include/protect.h	68;"	d
@@ -147,7 +148,7 @@ INDEX_LDT_RW	include/protect.h	91;"	d
 INDEX_TSS	include/protect.h	72;"	d
 INDEX_VIDEO	include/protect.h	71;"	d
 INIT_STACK_SIZE	include/proc.h	18;"	d
-INODE_SIZE	include/fs.h	95;"	d
+INODE_SIZE	include/fs_misc.h	92;"	d
 INT_M_CTL	include/const.h	40;"	d
 INT_M_CTLMASK	include/const.h	41;"	d
 INT_S_CTL	include/const.h	42;"	d
@@ -183,10 +184,11 @@ InitKernel	boot/loader.asm	/^InitKernel:	; 遍历每一个 Program Header，根�
 KERNELESPREG	include/proc.h	27;"	d
 KEYBOARD_IRQ	include/const.h	57;"	d
 KWALL	include/memman.h	12;"	d
+K_LIN2PHY	include/const.h	76;"	d
 K_PHY2LIN	include/const.h	75;"	d
 KernelFileName	boot/loader.asm	/^KernelFileName		db	"KERNEL  BIN", 0	; KERNEL.BIN 之文件名$/;"	d
-KernelLinBase	include/const.h	94;"	d
-KernelLinLimitMAX	include/const.h	95;"	d
+KernelLinBase	include/const.h	95;"	d
+KernelLinLimitMAX	include/const.h	96;"	d
 KernelPageTblAddr	include/const.h	72;"	d
 KernelSize	include/const.h	74;"	d
 KernelStackSpace	kernel/kernel.asm	/^KernelStackSpace	resb	2 * 1024$/;"	l
@@ -231,19 +233,19 @@ LDFLAGS_kernel	Makefile	/^LDFLAGS_kernel	= -m elf_i386 -s -Ttext $(ENTRYPOINT) -
 LDFLAGS_kernel_gdb	Makefile	/^LDFLAGS_kernel_gdb	= -m elf_i386 -Ttext $(ENTRYPOINT)$/;"	m
 LDT_SIZE	include/protect.h	87;"	d
 LIN_MEMMAP	include/proc.h	/^}LIN_MEMMAP;$/;"	t	typeref:struct:s_lin_memmap
-LSEEK	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+LSEEK	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 LoadMessage	boot/loader.asm	/^LoadMessage:		db	"Loading  "$/;"	d
 LoaderFileName	boot/boot.asm	/^LoaderFileName		db	"LOADER  BIN", 0	; LOADER.BIN 之文件名$/;"	d
-MAGIC_V1	include/fs.h	25;"	d
+MAGIC_V1	include/fs_misc.h	22;"	d
 MAJOR	include/fs_const.h	52;"	d
 MAJOR_SHIFT	include/fs_const.h	49;"	d
 MAKE_DEV	include/fs_const.h	50;"	d
 MAKE_DEVICE_REG	include/hd.h	261;"	d
 MAX_DRIVES	include/fs_const.h	58;"	d
-MAX_FILENAME_LEN	include/fs.h	102;"	d
+MAX_FILENAME_LEN	include/fs_misc.h	99;"	d
 MAX_FILENAME_LEN	include/stdio.h	22;"	d
 MAX_INT	include/const.h	13;"	d
-MAX_PATH	include/fs_misc.h	11;"	d
+MAX_PATH	include/fs.h	12;"	d
 MAX_PATH	include/stdio.h	23;"	d
 MAX_PRIM	include/fs_const.h	70;"	d
 MAX_SUBPARTITIONS	include/fs_const.h	72;"	d
@@ -253,7 +255,7 @@ MEMMAN	include/memman.h	/^struct MEMMAN{$/;"	s
 MEMMAN_ADDR	include/memman.h	10;"	d
 MEMMAN_FREES	include/memman.h	9;"	d
 MEMSTART	include/memman.h	15;"	d
-MESSAGE	include/fs_misc.h	/^} MESSAGE;$/;"	t	typeref:struct:__anon1
+MESSAGE	include/type.h	/^} MESSAGE;$/;"	t	typeref:struct:__anon5
 MINOR	include/fs_const.h	53;"	d
 MINOR_BOOT	include/fs_const.h	78;"	d
 MINOR_hd1a	include/fs_const.h	75;"	d
@@ -273,15 +275,15 @@ MessageLength	boot/loader.asm	/^MessageLength		equ	9$/;"	d
 NAME_LEN	include/fs_const.h	18;"	d
 NO_DEV	include/fs_const.h	42;"	d
 NO_PART	include/fs_const.h	85;"	d
-NR_CHILD_MAX	include/proc.h	57;"	d
+NR_CHILD_MAX	include/proc.h	56;"	d
 NR_CONSOLES	include/fs_const.h	8;"	d
-NR_CPUS	include/proc.h	52;"	d
+NR_CPUS	include/proc.h	51;"	d
 NR_DEFAULT_FILE_SECTS	include/fs_const.h	105;"	d
-NR_FILES	include/proc.h	53;"	d
+NR_FILES	include/proc.h	52;"	d
 NR_FILE_DESC	include/fs_const.h	89;"	d
 NR_INODE	include/fs_const.h	90;"	d
 NR_IRQ	include/const.h	55;"	d
-NR_K_PCBS	include/proc.h	46;"	d
+NR_K_PCBS	include/proc.h	47;"	d
 NR_PART_PER_DRIVE	include/fs_const.h	59;"	d
 NR_PCBS	include/proc.h	45;"	d
 NR_PRIM_PER_DRIVE	include/fs_const.h	62;"	d
@@ -289,29 +291,30 @@ NR_SUB_PER_DRIVE	include/fs_const.h	61;"	d
 NR_SUB_PER_PART	include/fs_const.h	60;"	d
 NR_SUPER_BLOCK	include/fs_const.h	91;"	d
 NR_SYS_CALL	include/const.h	68;"	d
-NR_TASKS	include/proc.h	50;"	d
+NR_TASKS	include/proc.h	46;"	d
+NULL	include/type.h	85;"	d
 OBJS	Makefile	/^OBJS		= kernel\/kernel.o kernel\/syscall.o kernel\/start.o kernel\/main.o kernel\/clock.o\\$/;"	m
 OBJSINIT	Makefile	/^OBJSINIT	= init\/init.o init\/initstart.o lib\/ulib.a $/;"	m
 OBJSULIB	Makefile	/^OBJSULIB = lib\/string.o kernel\/syscall.o$/;"	m
 OFFSET	include/fs_const.h	25;"	d
-OPEN	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+OPEN	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 ORANGESBOOT	Makefile	/^ORANGESBOOT	= boot\/boot.bin boot\/loader.bin$/;"	m
 ORANGESINIT	Makefile	/^ORANGESINIT	= init\/init.bin$/;"	m
 ORANGESKERNEL	Makefile	/^ORANGESKERNEL	= kernel.bin$/;"	m
 ORANGES_PART	include/fs_const.h	84;"	d
-O_CREAT	include/fs_misc.h	12;"	d
+O_CREAT	include/fs.h	13;"	d
 O_CREAT	include/stdio.h	24;"	d
-O_RDWR	include/fs_misc.h	13;"	d
+O_RDWR	include/fs.h	14;"	d
 O_RDWR	include/stdio.h	25;"	d
 PARTITION_ENTRY	include/hd.h	/^} PARTITION_ENTRY;$/;"	v	typeref:struct:part_ent
 PARTITION_TABLE_OFFSET	include/hd.h	256;"	d
 PATHNAME	include/fs_const.h	16;"	d
-PG_P	include/const.h	110;"	d
-PG_PS	include/const.h	115;"	d
-PG_RWR	include/const.h	111;"	d
-PG_RWW	include/const.h	112;"	d
-PG_USS	include/const.h	113;"	d
-PG_USU	include/const.h	114;"	d
+PG_P	include/const.h	111;"	d
+PG_PS	include/const.h	116;"	d
+PG_RWR	include/const.h	112;"	d
+PG_RWW	include/const.h	113;"	d
+PG_USS	include/const.h	114;"	d
+PG_USU	include/const.h	115;"	d
 POSITION	include/fs_const.h	23;"	d
 PRINTER_IRQ	include/const.h	64;"	d
 PRIVATE	include/const.h	20;"	d
@@ -328,9 +331,9 @@ P_STACKBASE	include/proc.h	19;"	d
 P_STACKTOP	include/proc.h	38;"	d
 PageTblNumAddr	include/const.h	71;"	d
 RATE_GENERATOR	include/const.h	48;"	d
-RD_SECT	include/fs.h	136;"	d
-RD_SECT_ZCR	include/fs.h	149;"	d
-READ	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+RD_SECT	include/fs_misc.h	133;"	d
+RD_SECT_SCHED	include/fs_misc.h	147;"	d
+READ	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 READY	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	e	enum:proc_stat
 REG_ALT_STATUS	include/hd.h	220;"	d
 REG_CMD	include/hd.h	176;"	d
@@ -369,11 +372,11 @@ SECONDARY_IRQ	include/const.h	60;"	d
 SECTOR_BITS	include/fs_const.h	38;"	d
 SECTOR_SIZE	include/fs_const.h	37;"	d
 SECTOR_SIZE_SHIFT	include/fs_const.h	39;"	d
-SEEK_CUR	include/fs_misc.h	15;"	d
+SEEK_CUR	include/fs.h	16;"	d
 SEEK_CUR	include/stdio.h	27;"	d
-SEEK_END	include/fs_misc.h	16;"	d
+SEEK_END	include/fs.h	17;"	d
 SEEK_END	include/stdio.h	28;"	d
-SEEK_SET	include/fs_misc.h	14;"	d
+SEEK_SET	include/fs.h	15;"	d
 SEEK_SET	include/stdio.h	26;"	d
 SELECTOR_DUMMY	include/protect.h	75;"	d
 SELECTOR_FLAT_C	include/protect.h	76;"	d
@@ -388,8 +391,7 @@ SLEEPING	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate
 SSREG	include/proc.h	37;"	d
 STACK_FRAME	include/proc.h	/^}STACK_FRAME;$/;"	t	typeref:struct:s_stackframe
 STACK_SIZE_TASK	include/proc.h	163;"	d
-STACK_SIZE_TOTAL	include/proc.h	165;"	d
-STAT	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+STAT	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 STATUS_BSY	include/hd.h	167;"	d
 STATUS_CORR	include/hd.h	172;"	d
 STATUS_DFSE	include/hd.h	169;"	d
@@ -398,15 +400,15 @@ STATUS_DRQ	include/hd.h	171;"	d
 STATUS_DSC	include/hd.h	170;"	d
 STATUS_ERR	include/hd.h	174;"	d
 STATUS_IDX	include/hd.h	173;"	d
-SUPER_BLOCK_SIZE	include/fs.h	62;"	d
+SUPER_BLOCK_SIZE	include/fs_misc.h	59;"	d
 SelectorFlatC	boot/loader.asm	/^SelectorFlatC		equ	LABEL_DESC_FLAT_C	- LABEL_GDT$/;"	d
 SelectorFlatRW	boot/loader.asm	/^SelectorFlatRW		equ	LABEL_DESC_FLAT_RW	- LABEL_GDT$/;"	d
 SelectorVideo	boot/loader.asm	/^SelectorVideo		equ	LABEL_DESC_VIDEO	- LABEL_GDT + SA_RPL3$/;"	d
 SetupPaging	boot/loader.asm	/^SetupPaging:$/;"	l
-SharePageBase	include/const.h	86;"	d
-SharePageLimit	include/const.h	87;"	d
-StackLinBase	include/const.h	91;"	d
-StackLinLimitMAX	include/const.h	90;"	d
+SharePageBase	include/const.h	87;"	d
+SharePageLimit	include/const.h	88;"	d
+StackLinBase	include/const.h	92;"	d
+StackLinLimitMAX	include/const.h	91;"	d
 StackSpace	boot/loader.asm	/^StackSpace:	times	1000h	db	0$/;"	l
 StackSpace	kernel/kernel.asm	/^StackSpace		resb	2 * 1024$/;"	l
 StackTop	kernel/kernel.asm	/^StackTop:		; used only as irq-stack in minios. added by xw$/;"	l
@@ -418,23 +420,23 @@ TIMER_MODE	include/const.h	47;"	d
 TREE_INFO	include/proc.h	/^}TREE_INFO;$/;"	t	typeref:struct:s_tree_info
 TRUE	include/const.h	23;"	d
 TSS	include/protect.h	/^}TSS;$/;"	t	typeref:struct:s_tss
-TYPE_PROCESS	include/proc.h	58;"	d
-TYPE_THREAD	include/proc.h	59;"	d
+TYPE_PROCESS	include/proc.h	57;"	d
+TYPE_THREAD	include/proc.h	58;"	d
 TestA	kernel/ktest.c	/^void TestA()$/;"	f
 TestB	kernel/ktest.c	/^void TestB()$/;"	f
 TestC	kernel/ktest.c	/^void TestC()$/;"	f
-TextLinBase	include/const.h	80;"	d
-TextLinLimitMAX	include/const.h	81;"	d
+TextLinBase	include/const.h	81;"	d
+TextLinLimitMAX	include/const.h	82;"	d
 TopOfStack	boot/loader.asm	/^TopOfStack	equ	BaseOfLoaderPhyAddr + $	; 栈顶$/;"	d
-UNLINK	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+UNLINK	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 UWALL	include/memman.h	14;"	d
-VpageLinBase	include/const.h	84;"	d
-VpageLinLimitMAX	include/const.h	85;"	d
+VpageLinBase	include/const.h	85;"	d
+VpageLinLimitMAX	include/const.h	86;"	d
 WALL	include/memman.h	13;"	d
 WHENCE	include/fs_const.h	26;"	d
-WRITE	include/fs_misc.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
-WR_SECT	include/fs.h	142;"	d
-WR_SECT_ZCR	include/fs.h	155;"	d
+WRITE	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
+WR_SECT	include/fs_misc.h	139;"	d
+WR_SECT_SCHED	include/fs_misc.h	153;"	d
 XT_WINI_IRQ	include/const.h	62;"	d
 _ARDStruct	boot/loader.asm	/^_ARDStruct:			; Address Range Descriptor Structure$/;"	l
 _MemChkBuf	boot/loader.asm	/^_MemChkBuf:	times	256	db	0$/;"	l
@@ -462,7 +464,6 @@ _NR_unlink	kernel/syscall.asm	/^_NR_unlink			equ 22 ;	\/\/added by xw, 18\/6\/18
 _NR_write	kernel/syscall.asm	/^_NR_write			equ 20 ;	\/\/added by xw, 18\/6\/18$/;"	d
 _NR_yield	kernel/syscall.asm	/^_NR_yield			equ 13 ;	\/\/added by xw, 17\/12$/;"	d
 _ORANGES_CONST_H_	include/const.h	9;"	d
-_ORANGES_FS_H_	include/fs.h	11;"	d
 _ORANGES_HD_H_	include/hd.h	11;"	d
 _ORANGES_PROTECT_H_	include/protect.h	9;"	d
 _ORANGES_TYPE_H_	include/type.h	9;"	d
@@ -482,7 +483,7 @@ _start	kernel/kernel.asm	/^_start:$/;"	l
 _szMemChkTitle	boot/loader.asm	/^_szMemChkTitle:			db	"BaseAddrL BaseAddrH LengthLow LengthHigh   Type", 0Ah, 0$/;"	d
 _szRAMSize	boot/loader.asm	/^_szRAMSize:			db	"RAM size:", 0$/;"	d
 _szReturn	boot/loader.asm	/^_szReturn:			db	0Ah, 0$/;"	d
-_unused	include/fs.h	/^	u8	_unused[16];	\/**< Stuff for alignment *\/$/;"	m	struct:inode
+_unused	include/fs_misc.h	/^	u8	_unused[16];	\/**< Stuff for alignment *\/$/;"	m	struct:inode
 addr	include/global.h	/^	u32	addr;$/;"	m	struct:memfree
 addr	include/memman.h	/^	u32 addr,size;$/;"	m	struct:FREEINFO
 alloc_PCB	kernel/proc.c	/^PUBLIC PROCESS* alloc_PCB()$/;"	f
@@ -539,12 +540,12 @@ dec	boot/boot.asm	/^	dec	dx					; ┛就跳到下一个 Sector$/;"	d
 dec	boot/boot.asm	/^dec	cx$/;"	l
 dec	boot/loader.asm	/^	dec	dx					; ┛$/;"	d
 delay	lib/klib.c	/^PUBLIC void delay(int time)$/;"	f
-dev_drv_map	include/fs.h	/^struct dev_drv_map {$/;"	s
+dev_drv_map	include/fs_misc.h	/^struct dev_drv_map {$/;"	s
 device	include/hd.h	/^	u8	device;$/;"	m	struct:hd_cmd
-dir_ent_fname_off	include/fs.h	/^	u32	dir_ent_fname_off;\/**< Offset of `struct dir_entry::name' *\/$/;"	m	struct:super_block
-dir_ent_inode_off	include/fs.h	/^	u32	dir_ent_inode_off;\/**< Offset of `struct dir_entry::inode_nr' *\/$/;"	m	struct:super_block
-dir_ent_size	include/fs.h	/^	u32	dir_ent_size;     \/**< DIR_ENTRY_SIZE *\/$/;"	m	struct:super_block
-dir_entry	include/fs.h	/^struct dir_entry {$/;"	s
+dir_ent_fname_off	include/fs_misc.h	/^	u32	dir_ent_fname_off;\/**< Offset of `struct dir_entry::name' *\/$/;"	m	struct:super_block
+dir_ent_inode_off	include/fs_misc.h	/^	u32	dir_ent_inode_off;\/**< Offset of `struct dir_entry::inode_nr' *\/$/;"	m	struct:super_block
+dir_ent_size	include/fs_misc.h	/^	u32	dir_ent_size;     \/**< DIR_ENTRY_SIZE *\/$/;"	m	struct:super_block
+dir_entry	include/fs_misc.h	/^struct dir_entry {$/;"	s
 dis_already	lib/kliba.asm	/^dis_already:$/;"	l
 disable_0	lib/kliba.asm	/^disable_0:$/;"	l
 disable_8	lib/kliba.asm	/^disable_8:$/;"	l
@@ -558,13 +559,13 @@ disp_pos	command/echo.c	/^int disp_pos;$/;"	v
 disp_pos	include/global.h	/^EXTERN	int		disp_pos;$/;"	v
 disp_str	lib/kliba.asm	/^disp_str:$/;"	l
 divide_error	kernel/kernel.asm	/^divide_error:$/;"	l
-do_close	kernel/fs.c	/^PUBLIC int do_close(int fd)$/;"	f
-do_lseek	kernel/fs.c	/^PUBLIC int do_lseek()$/;"	f
-do_open	kernel/fs.c	/^PUBLIC int do_open()$/;"	f
-do_rdwt	kernel/fs.c	/^PUBLIC int do_rdwt()$/;"	f
-do_unlink	kernel/fs.c	/^PUBLIC int do_unlink()$/;"	f
+do_close	kernel/fs.c	/^PRIVATE int do_close(int fd)$/;"	f
+do_lseek	kernel/fs.c	/^PRIVATE int do_lseek(MESSAGE *fs_msg)$/;"	f
+do_open	kernel/fs.c	/^PRIVATE int do_open(MESSAGE *fs_msg)$/;"	f
+do_rdwt	kernel/fs.c	/^PRIVATE int do_rdwt(MESSAGE *fs_msg)$/;"	f
+do_unlink	kernel/fs.c	/^PRIVATE int do_unlink(MESSAGE *fs_msg)$/;"	f
 double_fault	kernel/kernel.asm	/^double_fault:$/;"	l
-driver_nr	include/fs.h	/^	int driver_nr; \/**< The proc nr.\\ of the device driver. *\/$/;"	m	struct:dev_drv_map
+driver_nr	include/fs_misc.h	/^	int driver_nr; \/**< The proc nr.\\ of the device driver. *\/$/;"	m	struct:dev_drv_map
 ds	include/proc.h	/^	u32	ds;			\/* ┃						│			*\/$/;"	m	struct:s_stackframe
 ds	include/protect.h	/^	u32	ds;$/;"	m	struct:s_tss
 dw	boot/boot.asm	/^dw 	0xaa55				; 结束标志$/;"	l
@@ -579,20 +580,20 @@ dwLengthLow	boot/loader.asm	/^	dwLengthLow	equ	BaseOfLoaderPhyAddr + _dwLengthLo
 dwMCRNumber	boot/loader.asm	/^dwMCRNumber		equ	BaseOfLoaderPhyAddr + _dwMCRNumber$/;"	d
 dwMemSize	boot/loader.asm	/^dwMemSize		equ	BaseOfLoaderPhyAddr + _dwMemSize$/;"	d
 dwType	boot/loader.asm	/^	dwType		equ	BaseOfLoaderPhyAddr + _dwType$/;"	d
-e_ehsize	include/elf.h	/^	u16	e_ehsize;				\/\/elf header（本文件头）的长度 $/;"	m	struct:__anon4
-e_entry	include/elf.h	/^	u32	e_entry;				\/\/ELF程序的入口虚拟地址$/;"	m	struct:__anon4
-e_flags	include/elf.h	/^	u32	e_flags;				\/\/用于标识ELF文件平台相关的属性 $/;"	m	struct:__anon4
-e_ident	include/elf.h	/^	u8	e_ident[EI_NIDENT];		\/\/ELF魔数，ELF字长，字节序，ELF文件版本等$/;"	m	struct:__anon4
-e_machine	include/elf.h	/^	u16	e_machine;				\/\/ELF的CPU平台属性 $/;"	m	struct:__anon4
-e_phentsize	include/elf.h	/^	u16	e_phentsize;			\/\/program header table 中每一个条目的长度$/;"	m	struct:__anon4
-e_phnum	include/elf.h	/^	u16	e_phnum;				\/\/program header table 中有多少个条目$/;"	m	struct:__anon4
-e_phoff	include/elf.h	/^	u32	e_phoff;				\/\/program header table(program头)在文件中的偏移$/;"	m	struct:__anon4
-e_shentsize	include/elf.h	/^	u16	e_shentsize;			\/\/section header table 中每一个条目的长度$/;"	m	struct:__anon4
-e_shnum	include/elf.h	/^	u16	e_shnum;				\/\/section header table 中有多少个条目$/;"	m	struct:__anon4
-e_shoff	include/elf.h	/^	u32	e_shoff;				\/\/section header table(section头)在文件中的偏移$/;"	m	struct:__anon4
-e_shstrndx	include/elf.h	/^	u16	e_shstrndx;				\/\/section header table 中字符索引 $/;"	m	struct:__anon4
-e_type	include/elf.h	/^	u16	e_type;					\/\/ELF文件类型，REL, 可执行文件，共享目标文件等$/;"	m	struct:__anon4
-e_version	include/elf.h	/^	u32	e_version;				\/\/ELF版本号$/;"	m	struct:__anon4
+e_ehsize	include/elf.h	/^	u16	e_ehsize;				\/\/elf header（本文件头）的长度 $/;"	m	struct:__anon2
+e_entry	include/elf.h	/^	u32	e_entry;				\/\/ELF程序的入口虚拟地址$/;"	m	struct:__anon2
+e_flags	include/elf.h	/^	u32	e_flags;				\/\/用于标识ELF文件平台相关的属性 $/;"	m	struct:__anon2
+e_ident	include/elf.h	/^	u8	e_ident[EI_NIDENT];		\/\/ELF魔数，ELF字长，字节序，ELF文件版本等$/;"	m	struct:__anon2
+e_machine	include/elf.h	/^	u16	e_machine;				\/\/ELF的CPU平台属性 $/;"	m	struct:__anon2
+e_phentsize	include/elf.h	/^	u16	e_phentsize;			\/\/program header table 中每一个条目的长度$/;"	m	struct:__anon2
+e_phnum	include/elf.h	/^	u16	e_phnum;				\/\/program header table 中有多少个条目$/;"	m	struct:__anon2
+e_phoff	include/elf.h	/^	u32	e_phoff;				\/\/program header table(program头)在文件中的偏移$/;"	m	struct:__anon2
+e_shentsize	include/elf.h	/^	u16	e_shentsize;			\/\/section header table 中每一个条目的长度$/;"	m	struct:__anon2
+e_shnum	include/elf.h	/^	u16	e_shnum;				\/\/section header table 中有多少个条目$/;"	m	struct:__anon2
+e_shoff	include/elf.h	/^	u32	e_shoff;				\/\/section header table(section头)在文件中的偏移$/;"	m	struct:__anon2
+e_shstrndx	include/elf.h	/^	u16	e_shstrndx;				\/\/section header table 中字符索引 $/;"	m	struct:__anon2
+e_type	include/elf.h	/^	u16	e_type;					\/\/ELF文件类型，REL, 可执行文件，共享目标文件等$/;"	m	struct:__anon2
+e_version	include/elf.h	/^	u32	e_version;				\/\/ELF版本号$/;"	m	struct:__anon2
 eax	include/proc.h	/^	u32	eax;		\/* ┛						│			*\/$/;"	m	struct:s_stackframe
 eax	include/protect.h	/^	u32	eax;$/;"	m	struct:s_tss
 ebp	include/proc.h	/^	u32	ebp;		\/* ┃						│			*\/$/;"	m	struct:s_stackframe
@@ -659,15 +660,15 @@ extern	kernel/kernel.asm	/^extern  p_proc_current$/;"	l
 extern	kernel/kernel.asm	/^extern  schedule$/;"	l
 extern	kernel/kernel.asm	/^extern  switch_pde$/;"	l
 extern	lib/kliba.asm	/^extern	disp_pos$/;"	l
-f_desc_table	include/fs_misc.h	/^EXTERN	struct file_desc f_desc_table[NR_FILE_DESC];$/;"	v	typeref:struct:file_desc
+f_desc_table	kernel/fs.c	/^PRIVATE struct file_desc f_desc_table[NR_FILE_DESC];$/;"	v	typeref:struct:file_desc
 fake_open	kernel/file.c	/^PUBLIC u32 fake_open(char* path,char* mode)		\/\/modified by xw, 18\/5\/30$/;"	f
 fake_read	kernel/file.c	/^PUBLIC u32 fake_read(u32 fd,void* buffer,u32 size)	\/\/modified by xw, 18\/5\/30$/;"	f
 fake_seek	kernel/file.c	/^PUBLIC u32 fake_seek(u32 pos)	\/\/modified by xw, 18\/5\/30$/;"	f
-fd_inode	include/fs.h	/^	struct inode*	fd_inode;	\/**< Ptr to the i-node *\/$/;"	m	struct:file_desc	typeref:struct:file_desc::inode
-fd_mode	include/fs.h	/^	int		fd_mode;	\/**< R or W *\/$/;"	m	struct:file_desc
-fd_pos	include/fs.h	/^	int		fd_pos;		\/**< Current position for R\/W. *\/$/;"	m	struct:file_desc
+fd_inode	include/fs_misc.h	/^	struct inode*	fd_inode;	\/**< Ptr to the i-node *\/$/;"	m	struct:file_desc	typeref:struct:file_desc::inode
+fd_mode	include/fs_misc.h	/^	int		fd_mode;	\/**< R or W *\/$/;"	m	struct:file_desc
+fd_pos	include/fs_misc.h	/^	int		fd_pos;		\/**< Current position for R\/W. *\/$/;"	m	struct:file_desc
 features	include/hd.h	/^	u8	features;$/;"	m	struct:hd_cmd
-file_desc	include/fs.h	/^struct file_desc {$/;"	s
+file_desc	include/fs_misc.h	/^struct file_desc {$/;"	s
 filp	include/proc.h	/^	struct file_desc * filp[NR_FILES];$/;"	m	struct:s_proc	typeref:struct:s_proc::file_desc
 flags	include/protect.h	/^	u32	flags;$/;"	m	struct:s_tss
 fork	kernel/syscall.asm	/^fork:$/;"	l
@@ -679,17 +680,17 @@ free	kernel/syscall.asm	/^free:$/;"	l
 free_4k	kernel/syscall.asm	/^free_4k:$/;"	l
 free_PCB	kernel/proc.c	/^PUBLIC void free_PCB(PROCESS *p)$/;"	f
 frees	include/memman.h	/^	u32 frees,maxfrees,lostsize,losts;	\/\/frees为当前空闲内存块数$/;"	m	struct:MEMMAN
-front	include/hd.h	/^	RWInfo *front;$/;"	m	struct:__anon3
+front	include/hd.h	/^	RWInfo *front;$/;"	m	struct:__anon1
 fs	include/proc.h	/^	u32	fs;			\/* ┃						│			*\/$/;"	m	struct:s_stackframe
 fs	include/protect.h	/^	u32	fs;$/;"	m	struct:s_tss
-fs_msg	include/fs_misc.h	/^EXTERN	MESSAGE	fs_msg;$/;"	v
-fsbuf	include/fs_misc.h	/^EXTERN	u8* fsbuf;$/;"	v
+fsbuf	kernel/fs.c	/^PRIVATE u8* fsbuf;$/;"	v
 gdt	include/global.h	/^EXTERN	DESCRIPTOR	gdt[GDT_SIZE];$/;"	v
 gdt_ptr	include/global.h	/^EXTERN	u8		gdt_ptr[6];	\/\/ 0~15:Limit  16~47:Base$/;"	v
 general_protection	kernel/kernel.asm	/^general_protection:$/;"	l
 getFreeMemInfo	boot/loader.asm	/^getFreeMemInfo:$/;"	l
 get_arg	kernel/kernel.asm	/^get_arg:$/;"	l
-get_inode	kernel/fs.c	/^PUBLIC struct inode * get_inode(int dev, int num)$/;"	f
+get_inode	kernel/fs.c	/^PRIVATE struct inode * get_inode(int dev, int num)$/;"	f
+get_inode_sched	kernel/fs.c	/^PRIVATE struct inode * get_inode_sched(int dev, int num)$/;"	f
 get_page_phy_addr	kernel/pagetbl.c	/^PUBLIC inline u32 get_page_phy_addr(	u32 pid,\/\/页表物理地址				\/\/edit by visual 2016.5.19$/;"	f
 get_part_table	kernel/hd.c	/^PRIVATE void get_part_table(int drive, int sect_nr, struct part_ent * entry)$/;"	f
 get_pde_index	kernel/pagetbl.c	/^PUBLIC	inline u32 get_pde_index(u32 AddrLin)$/;"	f
@@ -697,7 +698,7 @@ get_pde_phy_addr	kernel/pagetbl.c	/^ PUBLIC inline u32 get_pde_phy_addr(u32 pid)
 get_pid	kernel/syscall.asm	/^get_pid:$/;"	l
 get_pte_index	kernel/pagetbl.c	/^PUBLIC inline u32 get_pte_index(u32 AddrLin)$/;"	f
 get_pte_phy_addr	kernel/pagetbl.c	/^PUBLIC inline u32 get_pte_phy_addr(	u32 pid,\/\/页目录物理地址		\/\/edit by visual 2016.5.19$/;"	f
-get_super_block	kernel/fs.c	/^PUBLIC struct super_block * get_super_block(int dev)$/;"	f
+get_super_block	kernel/fs.c	/^PRIVATE struct super_block * get_super_block(int dev)$/;"	f
 get_ticks	kernel/syscall.asm	/^get_ticks:$/;"	l
 global	command/start.asm	/^global _start$/;"	l
 global	init/init.c	/^int global=0;$/;"	v
@@ -785,20 +786,21 @@ gs	include/protect.h	/^	u32	gs;$/;"	m	struct:s_tss
 halt	kernel/kernel.asm	/^halt:$/;"	l
 hd_close	kernel/hd.c	/^PUBLIC void hd_close(int device)$/;"	f
 hd_cmd	include/hd.h	/^struct hd_cmd {$/;"	s
-hd_cmd_out	kernel/hd.c	/^PUBLIC void hd_cmd_out(struct hd_cmd* cmd)$/;"	f
-hd_handler	kernel/hd.c	/^PUBLIC void hd_handler(int irq)$/;"	f
-hd_identify	kernel/hd.c	/^PUBLIC void hd_identify(int drive)$/;"	f
+hd_cmd_out	kernel/hd.c	/^PRIVATE void hd_cmd_out(struct hd_cmd* cmd)$/;"	f
+hd_handler	kernel/hd.c	/^PRIVATE void hd_handler(int irq)$/;"	f
+hd_identify	kernel/hd.c	/^PRIVATE void hd_identify(int drive)$/;"	f
 hd_info	include/hd.h	/^struct hd_info$/;"	s
 hd_info	kernel/hd.c	/^PRIVATE	struct hd_info hd_info[1];$/;"	v	typeref:struct:hd_info
 hd_int_waiting_flag	kernel/hd.c	/^PRIVATE volatile int hd_int_waiting_flag;$/;"	v
 hd_ioctl	kernel/hd.c	/^PUBLIC void hd_ioctl(MESSAGE * p)$/;"	f
 hd_open	kernel/hd.c	/^PUBLIC void hd_open(int device)$/;"	f
 hd_rdwt	kernel/hd.c	/^PUBLIC void hd_rdwt(MESSAGE * p)$/;"	f
-hd_rdwt_real	kernel/hd.c	/^PUBLIC void hd_rdwt_real(RWInfo *p)$/;"	f
-hd_rdwt_sched	kernel/hd.c	/^void hd_rdwt_sched(MESSAGE *p)$/;"	f
+hd_rdwt_real	kernel/hd.c	/^PRIVATE void hd_rdwt_real(RWInfo *p)$/;"	f
+hd_rdwt_sched	kernel/hd.c	/^PUBLIC void hd_rdwt_sched(MESSAGE *p)$/;"	f
 hd_service	kernel/hd.c	/^PUBLIC void hd_service()$/;"	f
 hd_status	kernel/hd.c	/^PRIVATE	u8 hd_status;$/;"	v
 hdbuf	kernel/hd.c	/^PRIVATE	u8 hdbuf[SECTOR_SIZE * 2];$/;"	v
+hdque	kernel/hd.c	/^PRIVATE HDQueue hdque;$/;"	v
 heap_lin_base	include/proc.h	/^	u32 heap_lin_base;						\/\/堆基址$/;"	m	struct:s_lin_memmap
 heap_lin_limit	include/proc.h	/^	u32 heap_lin_limit;						\/\/堆界限	$/;"	m	struct:s_lin_memmap
 hwint00	kernel/kernel.asm	/^hwint00:		; Interrupt routine for irq 0 (the clock).$/;"	l
@@ -817,27 +819,27 @@ hwint12	kernel/kernel.asm	/^hwint12:		; Interrupt routine for irq 12$/;"	l
 hwint13	kernel/kernel.asm	/^hwint13:		; Interrupt routine for irq 13 (FPU exception)$/;"	l
 hwint14	kernel/kernel.asm	/^hwint14:		; Interrupt routine for irq 14 (AT winchester)$/;"	l
 hwint15	kernel/kernel.asm	/^hwint15:		; Interrupt routine for irq 15$/;"	l
-i_cnt	include/fs.h	/^	int	i_cnt;		\/**< How many procs share this inode  *\/$/;"	m	struct:inode
-i_dev	include/fs.h	/^	int	i_dev;$/;"	m	struct:inode
-i_mode	include/fs.h	/^	u32	i_mode;		\/**< Accsess mode *\/$/;"	m	struct:inode
-i_nr_sects	include/fs.h	/^	u32	i_nr_sects;	\/**< How many sectors the file occupies *\/$/;"	m	struct:inode
-i_num	include/fs.h	/^	int	i_num;		\/**< inode nr.  *\/$/;"	m	struct:inode
-i_size	include/fs.h	/^	u32	i_size;		\/**< File size *\/$/;"	m	struct:inode
-i_start_sect	include/fs.h	/^	u32	i_start_sect;	\/**< The first sector of the data *\/$/;"	m	struct:inode
+i_cnt	include/fs_misc.h	/^	int	i_cnt;		\/**< How many procs share this inode  *\/$/;"	m	struct:inode
+i_dev	include/fs_misc.h	/^	int	i_dev;$/;"	m	struct:inode
+i_mode	include/fs_misc.h	/^	u32	i_mode;		\/**< Accsess mode *\/$/;"	m	struct:inode
+i_nr_sects	include/fs_misc.h	/^	u32	i_nr_sects;	\/**< How many sectors the file occupies *\/$/;"	m	struct:inode
+i_num	include/fs_misc.h	/^	int	i_num;		\/**< inode nr.  *\/$/;"	m	struct:inode
+i_size	include/fs_misc.h	/^	u32	i_size;		\/**< File size *\/$/;"	m	struct:inode
+i_start_sect	include/fs_misc.h	/^	u32	i_start_sect;	\/**< The first sector of the data *\/$/;"	m	struct:inode
 idt	include/global.h	/^EXTERN	GATE		idt[IDT_SIZE];$/;"	v
 idt_ptr	include/global.h	/^EXTERN	u8		idt_ptr[6];	\/\/ 0~15:Limit  16~47:Base$/;"	v
 in_byte	lib/kliba.asm	/^in_byte:$/;"	l
-in_hd_queue	kernel/hd.c	/^void in_hd_queue(HDQueue *hdq, RWInfo *p)$/;"	f
+in_hd_queue	kernel/hd.c	/^PRIVATE void in_hd_queue(HDQueue *hdq, RWInfo *p)$/;"	f
 inc	boot/boot.asm	/^	inc	di$/;"	d
 inc	boot/loader.asm	/^	inc	di$/;"	d
 info	include/proc.h	/^	TREE_INFO info;				\/\/记录进程树关系	add by visual 2016.5.25$/;"	m	struct:s_proc
-inform_int	kernel/hd.c	/^PUBLIC void inform_int()$/;"	f
+inform_int	kernel/hd.c	/^PRIVATE void inform_int()$/;"	f
 init	kernel/memman.c	/^void init()	\/\/初始化$/;"	f
 init_8259A	kernel/i8259.c	/^PUBLIC void init_8259A()$/;"	f
 init_descriptor	kernel/protect.c	/^PRIVATE void init_descriptor(DESCRIPTOR * p_desc, u32 base, u32 limit, u16 attribute)$/;"	f
 init_fs	kernel/fs.c	/^PUBLIC void init_fs() $/;"	f
 init_hd	kernel/hd.c	/^PUBLIC void init_hd()$/;"	f
-init_hd_queue	kernel/hd.c	/^void init_hd_queue(HDQueue *hdq)$/;"	f
+init_hd_queue	kernel/hd.c	/^PUBLIC void init_hd_queue(HDQueue *hdq)$/;"	f
 init_idt_desc	kernel/protect.c	/^PUBLIC void init_idt_desc(unsigned char vector, u8 desc_type, int_handler handler, unsigned char privilege)$/;"	f
 init_page_pte	kernel/pagetbl.c	/^PUBLIC	u32 init_page_pte(u32 pid)$/;"	f
 init_prot	kernel/protect.c	/^PUBLIC void init_prot()$/;"	f
@@ -845,16 +847,15 @@ initial	kernel/ktest.c	/^void initial()$/;"	f
 initial_eip	include/proc.h	/^	task_f	initial_eip;$/;"	m	struct:s_task
 initialize_cpus	kernel/main.c	/^PRIVATE int initialize_cpus()$/;"	f
 initialize_processes	kernel/main.c	/^PRIVATE int initialize_processes()$/;"	f
-inode	include/fs.h	/^struct inode {$/;"	s
-inode_isize_off	include/fs.h	/^	u32	inode_isize_off;  \/**< Offset of `struct inode::i_size' *\/$/;"	m	struct:super_block
-inode_nr	include/fs.h	/^	int	inode_nr;		\/**< inode nr. *\/$/;"	m	struct:dir_entry
-inode_size	include/fs.h	/^	u32	inode_size;       \/**< INODE_SIZE *\/$/;"	m	struct:super_block
-inode_start_off	include/fs.h	/^	u32	inode_start_off;  \/**< Offset of `struct inode::i_start_sect' *\/$/;"	m	struct:super_block
-inode_table	include/fs_misc.h	/^EXTERN	struct inode inode_table[NR_INODE];$/;"	v	typeref:struct:inode
+inode	include/fs_misc.h	/^struct inode {$/;"	s
+inode_isize_off	include/fs_misc.h	/^	u32	inode_isize_off;  \/**< Offset of `struct inode::i_size' *\/$/;"	m	struct:super_block
+inode_nr	include/fs_misc.h	/^	int	inode_nr;		\/**< inode nr. *\/$/;"	m	struct:dir_entry
+inode_size	include/fs_misc.h	/^	u32	inode_size;       \/**< INODE_SIZE *\/$/;"	m	struct:super_block
+inode_start_off	include/fs_misc.h	/^	u32	inode_start_off;  \/**< Offset of `struct inode::i_start_sect' *\/$/;"	m	struct:super_block
+inode_table	kernel/fs.c	/^PRIVATE struct inode inode_table[NR_INODE];$/;"	v	typeref:struct:inode
 instack	kernel/kernel.asm	/^instack:						;already in the irq-stack$/;"	l
 int_handler	include/type.h	/^typedef	void	(*int_handler)	();$/;"	t
-interrupt_wait	kernel/hd.c	/^PUBLIC void interrupt_wait()$/;"	f
-interrupt_wait_sched	kernel/hd.c	/^PUBLIC void interrupt_wait_sched()$/;"	f
+interrupt_wait	kernel/hd.c	/^PRIVATE void interrupt_wait()$/;"	f
 inval_opcode	kernel/kernel.asm	/^inval_opcode:$/;"	l
 inval_tss	kernel/kernel.asm	/^inval_tss:$/;"	l
 iobase	include/protect.h	/^	u16	iobase;	\/* I\/O位图基址大于或等于TSS段界限，就表示没有I\/O许可位图 *\/$/;"	m	struct:s_tss
@@ -885,26 +886,26 @@ logical	include/hd.h	/^	struct part_info	logical[NR_SUB_PER_DRIVE];$/;"	m	struct
 losts	include/memman.h	/^	u32 frees,maxfrees,lostsize,losts;	\/\/frees为当前空闲内存块数$/;"	m	struct:MEMMAN
 lostsize	include/memman.h	/^	u32 frees,maxfrees,lostsize,losts;	\/\/frees为当前空闲内存块数$/;"	m	struct:MEMMAN
 lseek	kernel/syscall.asm	/^lseek:$/;"	l
-m1	include/fs_misc.h	/^		struct mess1 m1;$/;"	m	union:__anon1::__anon2	typeref:struct:__anon1::__anon2::mess1
-m1i1	include/fs_misc.h	/^	int m1i1;$/;"	m	struct:mess1
-m1i2	include/fs_misc.h	/^	int m1i2;$/;"	m	struct:mess1
-m1i3	include/fs_misc.h	/^	int m1i3;$/;"	m	struct:mess1
-m1i4	include/fs_misc.h	/^	int m1i4;$/;"	m	struct:mess1
-m2	include/fs_misc.h	/^		struct mess2 m2;$/;"	m	union:__anon1::__anon2	typeref:struct:__anon1::__anon2::mess2
-m2p1	include/fs_misc.h	/^	void* m2p1;$/;"	m	struct:mess2
-m2p2	include/fs_misc.h	/^	void* m2p2;$/;"	m	struct:mess2
-m2p3	include/fs_misc.h	/^	void* m2p3;$/;"	m	struct:mess2
-m2p4	include/fs_misc.h	/^	void* m2p4;$/;"	m	struct:mess2
-m3	include/fs_misc.h	/^		struct mess3 m3;$/;"	m	union:__anon1::__anon2	typeref:struct:__anon1::__anon2::mess3
-m3i1	include/fs_misc.h	/^	int	m3i1;$/;"	m	struct:mess3
-m3i2	include/fs_misc.h	/^	int	m3i2;$/;"	m	struct:mess3
-m3i3	include/fs_misc.h	/^	int	m3i3;$/;"	m	struct:mess3
-m3i4	include/fs_misc.h	/^	int	m3i4;$/;"	m	struct:mess3
-m3l1	include/fs_misc.h	/^	u64	m3l1;$/;"	m	struct:mess3
-m3l2	include/fs_misc.h	/^	u64	m3l2;$/;"	m	struct:mess3
-m3p1	include/fs_misc.h	/^	void*	m3p1;$/;"	m	struct:mess3
-m3p2	include/fs_misc.h	/^	void*	m3p2;$/;"	m	struct:mess3
-magic	include/fs.h	/^	u32	magic;		  \/**< Magic number *\/$/;"	m	struct:super_block
+m1	include/type.h	/^		struct mess1 m1;$/;"	m	union:__anon5::__anon6	typeref:struct:__anon5::__anon6::mess1
+m1i1	include/type.h	/^	int m1i1;$/;"	m	struct:mess1
+m1i2	include/type.h	/^	int m1i2;$/;"	m	struct:mess1
+m1i3	include/type.h	/^	int m1i3;$/;"	m	struct:mess1
+m1i4	include/type.h	/^	int m1i4;$/;"	m	struct:mess1
+m2	include/type.h	/^		struct mess2 m2;$/;"	m	union:__anon5::__anon6	typeref:struct:__anon5::__anon6::mess2
+m2p1	include/type.h	/^	void* m2p1;$/;"	m	struct:mess2
+m2p2	include/type.h	/^	void* m2p2;$/;"	m	struct:mess2
+m2p3	include/type.h	/^	void* m2p3;$/;"	m	struct:mess2
+m2p4	include/type.h	/^	void* m2p4;$/;"	m	struct:mess2
+m3	include/type.h	/^		struct mess3 m3;$/;"	m	union:__anon5::__anon6	typeref:struct:__anon5::__anon6::mess3
+m3i1	include/type.h	/^	int	m3i1;$/;"	m	struct:mess3
+m3i2	include/type.h	/^	int	m3i2;$/;"	m	struct:mess3
+m3i3	include/type.h	/^	int	m3i3;$/;"	m	struct:mess3
+m3i4	include/type.h	/^	int	m3i4;$/;"	m	struct:mess3
+m3l1	include/type.h	/^	u64	m3l1;$/;"	m	struct:mess3
+m3l2	include/type.h	/^	u64	m3l2;$/;"	m	struct:mess3
+m3p1	include/type.h	/^	void*	m3p1;$/;"	m	struct:mess3
+m3p2	include/type.h	/^	void*	m3p2;$/;"	m	struct:mess3
+magic	include/fs_misc.h	/^	u32	magic;		  \/**< Magic number *\/$/;"	m	struct:super_block
 main	command/echo.c	/^int main(int argc, char* argv[])$/;"	f
 main	init/init.c	/^void main(int arg,char *argv[])$/;"	f
 main	tmp/test.c	/^int main()$/;"	f
@@ -913,7 +914,7 @@ malloc_4k	kernel/syscall.asm	/^malloc_4k:$/;"	l
 max	include/fs_const.h	11;"	d
 maxfrees	include/memman.h	/^	u32 frees,maxfrees,lostsize,losts;	\/\/frees为当前空闲内存块数$/;"	m	struct:MEMMAN
 memarg	kernel/syscallc.c	/^struct memfree *memarg = 0;$/;"	v	typeref:struct:memfree
-memcmp	kernel/fs.c	/^PUBLIC int memcmp(const void * s1, const void *s2, int n)$/;"	f
+memcmp	kernel/fs.c	/^PRIVATE int memcmp(const void * s1, const void *s2, int n)$/;"	f
 memcpy	lib/string.asm	/^memcpy:$/;"	l
 memfree	include/global.h	/^struct memfree{$/;"	s
 memman	kernel/memman.c	/^struct MEMMAN *memman = &s_memman;\/\/(struct MEMMAN *) MEMMAN_ADDR;$/;"	v	typeref:struct:MEMMAN
@@ -929,58 +930,57 @@ memman_total	kernel/memman.c	/^u32 memman_total(struct MEMMAN *man)$/;"	f
 memmap	include/proc.h	/^	LIN_MEMMAP	memmap;			\/\/线性内存分部信息 		add by visual 2016.5.4$/;"	m	struct:s_proc
 memset	lib/string.asm	/^memset:$/;"	l
 memtest	boot/loader.asm	/^memtest:$/;"	l
-mess1	include/fs_misc.h	/^struct mess1 {$/;"	s
-mess2	include/fs_misc.h	/^struct mess2 {$/;"	s
-mess3	include/fs_misc.h	/^struct mess3 {$/;"	s
+mess1	include/type.h	/^struct mess1 {$/;"	s
+mess2	include/type.h	/^struct mess2 {$/;"	s
+mess3	include/type.h	/^struct mess3 {$/;"	s
 milli_delay	kernel/clock.c	/^PUBLIC void milli_delay(int milli_sec)$/;"	f
 min	include/fs_const.h	12;"	d
-mkfs	kernel/fs.c	/^PUBLIC void mkfs()$/;"	f
+mkfs	kernel/fs.c	/^PRIVATE void mkfs()$/;"	f
 msg	include/hd.h	/^	MESSAGE *msg;$/;"	m	struct:rdwt_info
-msgtype	include/fs_misc.h	/^enum msgtype {$/;"	g
+msgtype	include/type.h	/^enum msgtype {$/;"	g
 mul	boot/boot.asm	/^	mul	dh$/;"	d
 mul	boot/loader.asm	/^	mul	dh$/;"	d
-n_1st_sect	include/fs.h	/^	u32	n_1st_sect;	  \/**< Number of the 1st data sector *\/$/;"	m	struct:super_block
-name	include/fs.h	/^	char name[MAX_FILENAME_LEN];	\/**< Filename *\/$/;"	m	struct:dir_entry
+n_1st_sect	include/fs_misc.h	/^	u32	n_1st_sect;	  \/**< Number of the 1st data sector *\/$/;"	m	struct:super_block
+name	include/fs_misc.h	/^	char name[MAX_FILENAME_LEN];	\/**< Filename *\/$/;"	m	struct:dir_entry
 name	include/proc.h	/^	char	name[32];$/;"	m	struct:s_task
 new_dir_entry	kernel/fs.c	/^PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)$/;"	f
 new_inode	kernel/fs.c	/^PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)$/;"	f
 next	include/hd.h	/^	struct rdwt_info *next;$/;"	m	struct:rdwt_info	typeref:struct:rdwt_info::rdwt_info
 nmi	kernel/kernel.asm	/^nmi:$/;"	l
-nr_imap_sects	include/fs.h	/^	u32	nr_imap_sects;	  \/**< How many inode-map sectors *\/$/;"	m	struct:super_block
-nr_inode_sects	include/fs.h	/^	u32	nr_inode_sects;   \/**< How many inode sectors *\/$/;"	m	struct:super_block
-nr_inodes	include/fs.h	/^	u32	nr_inodes;	  \/**< How many inodes *\/$/;"	m	struct:super_block
-nr_sects	include/fs.h	/^	u32	nr_sects;	  \/**< How many sectors *\/$/;"	m	struct:super_block
+nr_imap_sects	include/fs_misc.h	/^	u32	nr_imap_sects;	  \/**< How many inode-map sectors *\/$/;"	m	struct:super_block
+nr_inode_sects	include/fs_misc.h	/^	u32	nr_inode_sects;   \/**< How many inode sectors *\/$/;"	m	struct:super_block
+nr_inodes	include/fs_misc.h	/^	u32	nr_inodes;	  \/**< How many inodes *\/$/;"	m	struct:super_block
+nr_sects	include/fs_misc.h	/^	u32	nr_sects;	  \/**< How many sectors *\/$/;"	m	struct:super_block
 nr_sects	include/hd.h	/^	u32 nr_sects;		\/**$/;"	m	struct:part_ent
-nr_smap_sects	include/fs.h	/^	u32	nr_smap_sects;	  \/**< How many sector-map sectors *\/$/;"	m	struct:super_block
-num_1K	include/const.h	77;"	d
-num_4B	include/const.h	76;"	d
-num_4K	include/const.h	78;"	d
-num_4M	include/const.h	79;"	d
+nr_smap_sects	include/fs_misc.h	/^	u32	nr_smap_sects;	  \/**< How many sector-map sectors *\/$/;"	m	struct:super_block
+num_1K	include/const.h	78;"	d
+num_4B	include/const.h	77;"	d
+num_4K	include/const.h	79;"	d
+num_4M	include/const.h	80;"	d
 offset_high	include/protect.h	/^	u16	offset_high;	\/* Offset High *\/$/;"	m	struct:s_gate
 offset_low	include/protect.h	/^	u16	offset_low;	\/* Offset Low *\/$/;"	m	struct:s_gate
 open	kernel/syscall.asm	/^open:$/;"	l
 open_cnt	include/hd.h	/^	int			open_cnt;$/;"	m	struct:hd_info
 org	boot/loader.asm	/^org  0100h$/;"	l
 out_byte	lib/kliba.asm	/^out_byte:$/;"	l
-out_hd_queue	kernel/hd.c	/^int out_hd_queue(HDQueue *hdq, RWInfo **p)$/;"	f
+out_hd_queue	kernel/hd.c	/^PRIVATE int out_hd_queue(HDQueue *hdq, RWInfo **p)$/;"	f
 overflow	kernel/kernel.asm	/^overflow:$/;"	l
-p_align	include/elf.h	/^	u32	p_align;				\/\/该program	对齐方式$/;"	m	struct:__anon5
-p_filesz	include/elf.h	/^	u32	p_filesz;				\/\/该program	在文件中的长度$/;"	m	struct:__anon5
-p_flags	include/elf.h	/^	u32	p_flags;				\/\/该program	读写权限$/;"	m	struct:__anon5
-p_memsz	include/elf.h	/^	u32	p_memsz;				\/\/该program	在内存中的长度（不一定和filesz相等）$/;"	m	struct:__anon5
+p_align	include/elf.h	/^	u32	p_align;				\/\/该program	对齐方式$/;"	m	struct:__anon3
+p_filesz	include/elf.h	/^	u32	p_filesz;				\/\/该program	在文件中的长度$/;"	m	struct:__anon3
+p_flags	include/elf.h	/^	u32	p_flags;				\/\/该program	读写权限$/;"	m	struct:__anon3
+p_memsz	include/elf.h	/^	u32	p_memsz;				\/\/该program	在内存中的长度（不一定和filesz相等）$/;"	m	struct:__anon3
 p_name	include/proc.h	/^	char p_name[16];           \/* name of the process *\/$/;"	m	struct:s_proc
-p_offset	include/elf.h	/^	u32	p_offset;				\/\/该program	在文件中的偏移量$/;"	m	struct:__anon5
-p_paddr	include/elf.h	/^	u32	p_paddr;				\/\/该program	应该放在这个物理地址（对只使用物理地址的系统有效）$/;"	m	struct:__anon5
+p_offset	include/elf.h	/^	u32	p_offset;				\/\/该program	在文件中的偏移量$/;"	m	struct:__anon3
+p_paddr	include/elf.h	/^	u32	p_paddr;				\/\/该program	应该放在这个物理地址（对只使用物理地址的系统有效）$/;"	m	struct:__anon3
 p_proc_current	include/global.h	/^EXTERN	PROCESS*	p_proc_current;$/;"	v
 p_proc_next	include/global.h	/^EXTERN	PROCESS*	p_proc_next;	\/\/the next process that will run. added by xw, 18\/4\/26$/;"	v
-p_type	include/elf.h	/^	u32	p_type;					\/\/该program 	类型$/;"	m	struct:__anon5
-p_vaddr	include/elf.h	/^	u32	p_vaddr;				\/\/该program	应该放在这个线性地址$/;"	m	struct:__anon5
+p_type	include/elf.h	/^	u32	p_type;					\/\/该program 	类型$/;"	m	struct:__anon3
+p_vaddr	include/elf.h	/^	u32	p_vaddr;				\/\/该program	应该放在这个线性地址$/;"	m	struct:__anon3
 page_fault	kernel/kernel.asm	/^page_fault:$/;"	l
 page_fault_handler	kernel/pagetbl.c	/^PUBLIC void page_fault_handler(	u32 vec_no,\/\/异常编号，此时应该是14，代表缺页异常$/;"	f
 part_ent	include/hd.h	/^struct part_ent {$/;"	s
 part_info	include/hd.h	/^struct part_info {$/;"	s
 partition	kernel/hd.c	/^PRIVATE void partition(int device, int style)$/;"	f
-pcaller	include/fs_misc.h	/^EXTERN	PROCESS* pcaller;$/;"	v
 phy_exist	kernel/pagetbl.c	/^PUBLIC u32 phy_exist(u32 PageTblPhyAddr,\/\/页表物理地址$/;"	f
 phys_copy	include/string.h	14;"	d
 phys_set	include/string.h	15;"	d
@@ -995,11 +995,11 @@ ppid	include/proc.h	/^	int ppid;			\/\/当前父进程	$/;"	m	struct:s_tree_info
 primary	include/hd.h	/^	struct part_info	primary[NR_PRIM_PER_DRIVE];$/;"	m	struct:hd_info	typeref:struct:hd_info::part_info
 print_E	kernel/syscall.asm	/^print_E:$/;"	l
 print_F	kernel/syscall.asm	/^print_F:$/;"	l
-print_hdinfo	kernel/hd.c	/^PUBLIC void print_hdinfo(struct hd_info * hdi)$/;"	f
-print_identify_info	kernel/hd.c	/^PUBLIC void print_identify_info(u16* hdinfo)$/;"	f
+print_hdinfo	kernel/hd.c	/^PRIVATE void print_hdinfo(struct hd_info * hdi)$/;"	f
+print_identify_info	kernel/hd.c	/^PRIVATE void print_identify_info(u16* hdinfo)$/;"	f
 priority	include/proc.h	/^    int priority;$/;"	m	struct:s_proc
 proc	include/hd.h	/^	PROCESS *proc;$/;"	m	struct:rdwt_info
-proc2pid	include/proc.h	168;"	d
+proc2pid	include/proc.h	167;"	d
 proc_stat	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	g
 proc_table	kernel/global.c	/^PUBLIC	PROCESS			proc_table[NR_PCBS];										\/\/edit by visual 2016.4.5	$/;"	v
 pte_exist	kernel/pagetbl.c	/^PUBLIC u32 pte_exist(	u32 PageDirPhyAddr,\/\/页目录物理地址$/;"	f
@@ -1015,7 +1015,7 @@ push	boot/boot.asm	/^	push	dx$/;"	d
 push	boot/loader.asm	/^	push	dx$/;"	d
 push	kernel/kernel.asm	/^        push    ds      ;  |$/;"	d
 push	kernel/kernel.asm	/^    push    ds      ;  |$/;"	d
-put_inode	kernel/fs.c	/^PUBLIC void put_inode(struct inode * pinode)$/;"	f
+put_inode	kernel/fs.c	/^PRIVATE void put_inode(struct inode * pinode)$/;"	f
 put_irq_handler	kernel/i8259.c	/^PUBLIC void put_irq_handler(int irq, irq_handler handler)$/;"	f
 rdwt_info	include/hd.h	/^typedef struct rdwt_info$/;"	s
 read	kernel/syscall.asm	/^read:$/;"	l
@@ -1025,14 +1025,14 @@ read_Shdr	kernel/elf.c	/^void read_Shdr(u32 fd,Elf32_Shdr *File_Shdr,u32 offset)
 read_cr2	kernel/kernel.asm	/^read_cr2:$/;"	l
 read_elf	kernel/elf.c	/^PUBLIC void read_elf(u32 fd,Elf32_Ehdr* Echo_Ehdr,Elf32_Phdr Echo_Phdr[],Elf32_Shdr Echo_Shdr[])$/;"	f
 read_super_block	kernel/fs.c	/^PRIVATE void read_super_block(int dev)$/;"	f
-real_close	kernel/fs.c	/^PUBLIC int real_close(int fd)$/;"	f
-real_lseek	kernel/fs.c	/^PUBLIC int real_lseek(int fd, int offset, int whence)$/;"	f
-real_open	kernel/fs.c	/^PUBLIC int real_open(const char *pathname, int flags)$/;"	f
+real_close	kernel/fs.c	/^PRIVATE int real_close(int fd)$/;"	f
+real_lseek	kernel/fs.c	/^PRIVATE int real_lseek(int fd, int offset, int whence)$/;"	f
+real_open	kernel/fs.c	/^PRIVATE int real_open(const char *pathname, int flags)$/;"	f
 real_ppid	include/proc.h	/^	int real_ppid;  	\/\/亲父进程，创建它的那个进程$/;"	m	struct:s_tree_info
-real_read	kernel/fs.c	/^PUBLIC int real_read(int fd, void *buf, int count)$/;"	f
-real_unlink	kernel/fs.c	/^PUBLIC int real_unlink(const char * pathname)$/;"	f
-real_write	kernel/fs.c	/^PUBLIC int real_write(int fd, const void *buf, int count)$/;"	f
-rear	include/hd.h	/^	RWInfo *rear;$/;"	m	struct:__anon3
+real_read	kernel/fs.c	/^PRIVATE int real_read(int fd, void *buf, int count)$/;"	f
+real_unlink	kernel/fs.c	/^PRIVATE int real_unlink(const char * pathname)$/;"	f
+real_write	kernel/fs.c	/^PRIVATE int real_write(int fd, const void *buf, int count)$/;"	f
+rear	include/hd.h	/^	RWInfo *rear;$/;"	m	struct:__anon1
 refresh_page_cache	kernel/kernel.asm	/^refresh_page_cache:$/;"	l
 regs	include/proc.h	/^	STACK_FRAME regs;          \/* process registers saved in stack frame *\/$/;"	m	struct:s_proc
 renew_env	kernel/kernel.asm	/^renew_env:$/;"	l
@@ -1041,35 +1041,35 @@ restart_int	kernel/kernel.asm	/^restart_int:$/;"	l
 restart_restore	kernel/kernel.asm	/^restart_restore:$/;"	l
 restart_syscall	kernel/kernel.asm	/^restart_syscall:$/;"	l
 retaddr	include/proc.h	/^	u32	retaddr;	\/* return address for assembly code save()	│			*\/$/;"	m	struct:s_stackframe
-root_inode	include/fs.h	/^	u32	root_inode;       \/**< Inode nr of root directory *\/$/;"	m	struct:super_block
-root_inode	include/fs_misc.h	/^EXTERN	struct inode* root_inode;$/;"	v	typeref:struct:inode
-rw_sector	kernel/fs.c	/^PUBLIC int rw_sector(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)$/;"	f
-rw_sector_zcr	kernel/fs.c	/^PUBLIC int rw_sector_zcr(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)$/;"	f
-s_addr	include/elf.h	/^	u32 s_addr;    	\/\/该section 的虚拟地址$/;"	m	struct:__anon6
-s_addralign	include/elf.h	/^	u32 s_addralign; \/\/该section 对齐方式$/;"	m	struct:__anon6
+root_inode	include/fs_misc.h	/^	u32	root_inode;       \/**< Inode nr of root directory *\/$/;"	m	struct:super_block
+root_inode	kernel/fs.c	/^PRIVATE struct inode* root_inode;$/;"	v	typeref:struct:inode
+rw_sector	kernel/fs.c	/^PRIVATE int rw_sector(int io_type, int dev, u64 pos, int bytes, int proc_nr, void* buf)$/;"	f
+rw_sector_sched	kernel/fs.c	/^PRIVATE int rw_sector_sched(int io_type, int dev, int pos, int bytes, int proc_nr, void* buf)$/;"	f
+s_addr	include/elf.h	/^	u32 s_addr;    	\/\/该section 的虚拟地址$/;"	m	struct:__anon4
+s_addralign	include/elf.h	/^	u32 s_addralign; \/\/该section 对齐方式$/;"	m	struct:__anon4
 s_descriptor	include/protect.h	/^typedef struct s_descriptor		\/* 共 8 个字节 *\/$/;"	s
-s_entsize	include/elf.h	/^	u32 s_entsize;	\/\/该section 若有固定项目，则给出固定项目的大小，如符号表$/;"	m	struct:__anon6
-s_flags	include/elf.h	/^	u32 s_flags;    \/\/该section 在进程虚拟地址空间中的属性$/;"	m	struct:__anon6
+s_entsize	include/elf.h	/^	u32 s_entsize;	\/\/该section 若有固定项目，则给出固定项目的大小，如符号表$/;"	m	struct:__anon4
+s_flags	include/elf.h	/^	u32 s_flags;    \/\/该section 在进程虚拟地址空间中的属性$/;"	m	struct:__anon4
 s_gate	include/protect.h	/^typedef struct s_gate$/;"	s
-s_info	include/elf.h	/^	u32 s_info;		\/\/该section	附加信息$/;"	m	struct:__anon6
+s_info	include/elf.h	/^	u32 s_info;		\/\/该section	附加信息$/;"	m	struct:__anon4
 s_lin_memmap	include/proc.h	/^typedef struct s_lin_memmap {\/\/线性地址分布结构体	edit by visual 2016.5.25$/;"	s
-s_link	include/elf.h	/^	u32 s_link; 	\/\/该section	头部表符号链接$/;"	m	struct:__anon6
+s_link	include/elf.h	/^	u32 s_link; 	\/\/该section	头部表符号链接$/;"	m	struct:__anon4
 s_memman	kernel/memman.c	/^struct MEMMAN s_memman;$/;"	v	typeref:struct:MEMMAN
-s_name	include/elf.h	/^	u32 s_name;   	\/\/该section 段的名字$/;"	m	struct:__anon6
-s_offset	include/elf.h	/^	u32 s_offset;   \/\/该section 在文件中的偏移$/;"	m	struct:__anon6
+s_name	include/elf.h	/^	u32 s_name;   	\/\/该section 段的名字$/;"	m	struct:__anon4
+s_offset	include/elf.h	/^	u32 s_offset;   \/\/该section 在文件中的偏移$/;"	m	struct:__anon4
 s_proc	include/proc.h	/^typedef struct s_proc {$/;"	s
-s_size	include/elf.h	/^	u32 s_size;    	\/\/该section 的长度$/;"	m	struct:__anon6
+s_size	include/elf.h	/^	u32 s_size;    	\/\/该section 的长度$/;"	m	struct:__anon4
 s_stackframe	include/proc.h	/^typedef struct s_stackframe {	\/* proc_ptr points here				↑ Low			*\/$/;"	s
 s_task	include/proc.h	/^typedef struct s_task {$/;"	s
 s_tree_info	include/proc.h	/^typedef struct s_tree_info{\/\/进程树记录，包括父进程，子进程，子线程  \/\/add by visual 2016.5.25$/;"	s
 s_tss	include/protect.h	/^typedef struct s_tss {$/;"	s
-s_type	include/elf.h	/^	u32 s_type;    	\/\/该section 的类型，代码段，数据段，符号表等$/;"	m	struct:__anon6
+s_type	include/elf.h	/^	u32 s_type;    	\/\/该section 的类型，代码段，数据段，符号表等$/;"	m	struct:__anon4
 save_int	kernel/kernel.asm	/^save_int:$/;"	l
 save_syscall	kernel/kernel.asm	/^save_syscall:			;can't modify EAX, for it contains syscall number$/;"	l
-sb_dev	include/fs.h	/^	int	sb_dev; 	\/**< the super block's home device *\/$/;"	m	struct:super_block
+sb_dev	include/fs_misc.h	/^	int	sb_dev; 	\/**< the super block's home device *\/$/;"	m	struct:super_block
 sched	kernel/kernel.asm	/^sched:$/;"	l
 schedule	kernel/proc.c	/^PUBLIC void schedule()$/;"	f
-search_file	kernel/fs.c	/^PUBLIC int search_file(char * path)$/;"	f
+search_file	kernel/fs.c	/^PRIVATE int search_file(char * path)$/;"	f
 seg2phys	kernel/protect.c	/^PUBLIC u32 seg2phys(u16 seg)$/;"	f
 segment_not_present	kernel/kernel.asm	/^segment_not_present:$/;"	l
 selector	include/protect.h	/^	u16	selector;	\/* Selector *\/$/;"	m	struct:s_gate
@@ -1078,7 +1078,7 @@ size	include/global.h	/^	u32	size;$/;"	m	struct:memfree
 size	include/hd.h	/^	u32	size;	\/* how many sectors in this partition *\/$/;"	m	struct:part_info
 size	include/memman.h	/^	u32 addr,size;$/;"	m	struct:FREEINFO
 sleep	kernel/syscall.asm	/^sleep:$/;"	l
-source	include/fs_misc.h	/^	int source;$/;"	m	struct:__anon1
+source	include/type.h	/^	int source;$/;"	m	struct:__anon5
 spurious_irq	kernel/i8259.c	/^PUBLIC void spurious_irq(int irq)$/;"	f
 ss	include/proc.h	/^	u32	ss;			\/*  ┛						┷High			*\/$/;"	m	struct:s_stackframe
 ss	include/protect.h	/^	u32	ss;$/;"	m	struct:s_tss
@@ -1098,14 +1098,14 @@ start_sector	include/hd.h	/^	u8 start_sector;	\/**$/;"	m	struct:part_ent
 stat	include/proc.h	/^	enum proc_stat stat;			\/\/add by visual 2016.4.5$/;"	m	struct:s_proc	typeref:enum:s_proc::proc_stat
 str2	init/init.c	/^char *str2,*str3;$/;"	v
 str3	init/init.c	/^char *str2,*str3;$/;"	v
-strcmp	kernel/fs.c	/^PUBLIC int strcmp(const char * s1, const char *s2)$/;"	f
+strcmp	kernel/fs.c	/^PRIVATE int strcmp(const char * s1, const char *s2)$/;"	f
 strcpy	lib/string.asm	/^strcpy:$/;"	l
-strip_path	kernel/fs.c	/^PUBLIC int strip_path(char * filename, const char * pathname, struct inode** ppinode)$/;"	f
+strip_path	kernel/fs.c	/^PRIVATE int strip_path(char * filename, const char * pathname, struct inode** ppinode)$/;"	f
 strlen	lib/string.asm	/^strlen:$/;"	l
-super_block	include/fs.h	/^struct super_block {$/;"	s
-super_block	include/fs_misc.h	/^EXTERN	struct super_block super_block[NR_SUPER_BLOCK];$/;"	v	typeref:struct:super_block
+super_block	include/fs_misc.h	/^struct super_block {$/;"	s
+super_block	kernel/fs.c	/^PRIVATE struct super_block super_block[NR_SUPER_BLOCK];$/;"	v	typeref:struct:super_block
 switch_pde	kernel/pagetbl.c	/^PUBLIC	void switch_pde()$/;"	f
-sync_inode	kernel/fs.c	/^PUBLIC void sync_inode(struct inode * p)$/;"	f
+sync_inode	kernel/fs.c	/^PRIVATE void sync_inode(struct inode * p)$/;"	f
 sys_call	kernel/kernel.asm	/^sys_call:$/;"	l
 sys_call_table	kernel/global.c	/^PUBLIC	system_call		sys_call_table[NR_SYS_CALL] = {	sys_get_ticks, 									\/\/1st$/;"	v
 sys_close	kernel/fs.c	/^PUBLIC int sys_close(void *uesp)$/;"	f
@@ -1155,9 +1155,9 @@ ticks	include/proc.h	/^    int ticks;                 \/* remained ticks *\/$/;"
 times	boot/boot.asm	/^times 	510-($-$$)	db	0	; 填充剩下的空间，使生成的二进制代码恰好为512字节$/;"	l
 trap	include/protect.h	/^	u16	trap;$/;"	m	struct:s_tss
 tss	include/global.h	/^EXTERN	TSS		tss;$/;"	v
-type	include/fs_misc.h	/^	int type;$/;"	m	struct:__anon1
 type	include/proc.h	/^	int type;			\/\/当前是进程还是线程$/;"	m	struct:s_tree_info
-u	include/fs_misc.h	/^	} u;$/;"	m	struct:__anon1	typeref:union:__anon1::__anon2
+type	include/type.h	/^	int type;$/;"	m	struct:__anon5
+u	include/type.h	/^	} u;$/;"	m	struct:__anon5	typeref:union:__anon5::__anon6
 u16	include/type.h	/^typedef	unsigned short		u16;$/;"	t
 u32	include/type.h	/^typedef	unsigned int		u32;$/;"	t
 u64	include/type.h	/^typedef	unsigned long long	u64;$/;"	t
@@ -1175,7 +1175,7 @@ wRootDirSizeForLoop	boot/boot.asm	/^wRootDirSizeForLoop	dw	RootDirSectors	; Root
 wRootDirSizeForLoop	boot/loader.asm	/^wRootDirSizeForLoop	dw	RootDirSectors	; Root Directory 占用的扇区数$/;"	d
 wSectorNo	boot/boot.asm	/^wSectorNo		dw	0		; 要读取的扇区号$/;"	d
 wSectorNo	boot/loader.asm	/^wSectorNo		dw	0		; 要读取的扇区号$/;"	d
-waitfor	kernel/hd.c	/^PUBLIC int waitfor(int mask, int val, int timeout)$/;"	f
+waitfor	kernel/hd.c	/^PRIVATE int waitfor(int mask, int val, int timeout)$/;"	f
 write	kernel/syscall.asm	/^write:$/;"	l
 write_page_pde	kernel/pagetbl.c	/^PUBLIC void write_page_pde(	u32 PageDirPhyAddr,\/\/页目录物理地址$/;"	f
 write_page_pte	kernel/pagetbl.c	/^PUBLIC void write_page_pte(	u32 TblPhyAddr,\/\/页表物理地址$/;"	f
