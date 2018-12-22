@@ -96,7 +96,7 @@ int main(int arg,char *argv[])
                           Syscall Fork Test
 added by xw, 18/4/27
  *======================================================================*/
-	/*
+//	/*
 void main(int arg,char *argv[])
 {
 	int i=0;
@@ -187,7 +187,7 @@ void main(int arg,char *argv[])
                            File System Test
 added by xw, 18/6/19
  *======================================================================*/
-//	/*
+	/*
 void main(int arg,char *argv[])
 {
 //	while (1) {}

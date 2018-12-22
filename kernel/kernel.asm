@@ -18,6 +18,7 @@ extern	disp_str
 extern	delay
 extern	irq_table
 extern	page_fault_handler
+extern	divide_error_handler	;added by xw, 18/12/22
 extern	disp_int
 extern  schedule
 extern  switch_pde
@@ -303,67 +304,214 @@ ALIGN	16
 hwint15:		; Interrupt routine for irq 15
 	hwint_slave	15
 
+;commented by xw, 18/12/18
+;commented begin
+;; 中断和异常 -- 异常
+;divide_error:
+;	push	0xFFFFFFFF	; no err code
+;	push	0		; vector_no	= 0
+;	jmp	exception
+;single_step_exception:
+;	push	0xFFFFFFFF	; no err code
+;	push	1		; vector_no	= 1
+;	jmp	exception
+;nmi:
+;	push	0xFFFFFFFF	; no err code
+;	push	2		; vector_no	= 2
+;	jmp	exception
+;breakpoint_exception:
+;	push	0xFFFFFFFF	; no err code
+;	push	3		; vector_no	= 3
+;	jmp	exception
+;overflow:
+;	push	0xFFFFFFFF	; no err code
+;	push	4		; vector_no	= 4
+;	jmp	exception
+;bounds_check:
+;	push	0xFFFFFFFF	; no err code
+;	push	5		; vector_no	= 5
+;	jmp	exception
+;inval_opcode:
+;	push	0xFFFFFFFF	; no err code
+;	push	6		; vector_no	= 6
+;	jmp	exception
+;copr_not_available:
+;	push	0xFFFFFFFF	; no err code
+;	push	7		; vector_no	= 7
+;	jmp	exception
+;double_fault:
+;	push	8		; vector_no	= 8
+;	jmp	exception
+;copr_seg_overrun:
+;	push	0xFFFFFFFF	; no err code
+;	push	9		; vector_no	= 9
+;	jmp	exception
+;inval_tss:
+;	push	10		; vector_no	= A
+;	jmp	exception
+;segment_not_present:
+;	push	11		; vector_no	= B
+;	jmp	exception
+;stack_exception:
+;	push	12		; vector_no	= C
+;	jmp	exception
+;general_protection:
+;	push	13		; vector_no	= D
+;	jmp	exception
+;page_fault:
+;	;page_fault_origin:
+;	;push	14		; vector_no	= E
+;	;jmp exception
+;
+;	;add by visual 2016.4.18
+;	pushad          ; `.
+;    push    ds      ;  |
+;    push    es      ;  | 保存原寄存器值
+;    push    fs      ;  |
+;    push    gs      ; /
+;    mov     dx, ss
+;    mov     ds, dx
+;    mov     es, dx
+;	mov		fs, dx							;value of fs and gs in user process is different to that in kernel
+;	mov		dx, SELECTOR_VIDEO - 2			;added by xw, 18/6/20
+;	mov		gs, dx
+;	
+;	mov 	eax,[esp + RETADR - P_STACKBASE]; 把压入的错误码放进eax
+;	mov 	ebx,[esp + EIPREG - P_STACKBASE]; 把压入的eip放进ebx
+;	mov 	ecx,[esp + CSREG  - P_STACKBASE]; 把压入的cs放进ecx
+;	mov 	edx,[esp + EFLAGSREG  - P_STACKBASE]; 把压入的eflags放进edx	
+;	
+;	;inc     dword [k_reenter]        ;k_reenter++;   ;k_reenter only counts if irq reenters, xw, 18/4/20
+;	;cmp     dword [k_reenter], 0     ;if(k_reenter ==0)
+;	;jne     .inkernel                ;(k_reenter !=0)	
+;	;mov	esp, StackTop			  ;deleted by xw, 17/12/11		
+;	;.inkernel:
+;	push edx	;压入eflags
+;	push ecx	;压入cs
+;	push ebx	;压入eip
+;	push eax	;压入错误码
+;	push	14		; vector_no	= E
+;	;jmp	exception
+;	;call	exception_handler edit by visual 2016.4.19
+;	call page_fault_handler
+;	
+;	add esp, 20	;clear 5 arguments in stack, added by xw, 17/12/11	
+;	;jmp restart
+;	jmp restart_restore	;modified by xw, 17/12/11
+;	
+;copr_error:
+;	push	0xFFFFFFFF	; no err code
+;	push	16		; vector_no	= 10h
+;	jmp	exception
+;
+;exception:
+;	call	exception_handler
+;	add	esp, 4*2	; 让栈顶指向 EIP，堆栈中从顶向下依次是：EIP、CS、EFLAGS
+;	hlt
+;commented by xw, 18/12/18
+;commented end
 
+; ====================================================================================
+;                                   exception
+; ====================================================================================
+;restructured exception-handling procedure
+;added by xw, 18/12/18
+%macro	exception_no_errcode	2
+	push	0xFFFFFFFF			;no err code
+	call	save_exception
+	mov		esi, esp			;esp points to pushed address of restart_exception at present
+	add		esi, 4 * 17			;we use esi to help to fetch arguments of exception handler from the stack.
+								;17 is calculated by: 4+8+retaddr+errcode+eip+cs+eflag=17
+	mov		eax, [esi]			;saved eflags
+	push	eax
+	mov		eax, [esi - 4]		;saved cs
+	push	eax
+	mov		eax, [esi - 4 * 2]	;saved eip
+	push	eax
+	mov		eax, [esi - 4 * 3]	;saved err code
+	push	eax
+	push	%1					;vector_no
+	sti
+	call	%2
+	cli
+	add		esp, 4 * 5			;clear arguments of exception handler in stack
+	ret							;returned to 'restart_exception' procedure
+%endmacro
 
-; 中断和异常 -- 异常
-divide_error:
-	push	0xFFFFFFFF	; no err code
-	push	0		; vector_no	= 0
-	jmp	exception
-single_step_exception:
-	push	0xFFFFFFFF	; no err code
-	push	1		; vector_no	= 1
-	jmp	exception
-nmi:
-	push	0xFFFFFFFF	; no err code
-	push	2		; vector_no	= 2
-	jmp	exception
-breakpoint_exception:
-	push	0xFFFFFFFF	; no err code
-	push	3		; vector_no	= 3
-	jmp	exception
-overflow:
-	push	0xFFFFFFFF	; no err code
-	push	4		; vector_no	= 4
-	jmp	exception
-bounds_check:
-	push	0xFFFFFFFF	; no err code
-	push	5		; vector_no	= 5
-	jmp	exception
-inval_opcode:
-	push	0xFFFFFFFF	; no err code
-	push	6		; vector_no	= 6
-	jmp	exception
-copr_not_available:
-	push	0xFFFFFFFF	; no err code
-	push	7		; vector_no	= 7
-	jmp	exception
-double_fault:
-	push	8		; vector_no	= 8
-	jmp	exception
-copr_seg_overrun:
-	push	0xFFFFFFFF	; no err code
-	push	9		; vector_no	= 9
-	jmp	exception
-inval_tss:
-	push	10		; vector_no	= A
-	jmp	exception
-segment_not_present:
-	push	11		; vector_no	= B
-	jmp	exception
-stack_exception:
-	push	12		; vector_no	= C
-	jmp	exception
-general_protection:
-	push	13		; vector_no	= D
-	jmp	exception
-page_fault:
-	;page_fault_origin:
-	;push	14		; vector_no	= E
-	;jmp exception
+%macro	exception_errcode	2
+	call	save_exception
+	mov		esi, esp			;esp points to pushed address of restart_exception at present
+	add		esi, 4 * 17			;we use esi to help to fetch arguments of exception handler from the stack.
+								;17 is calculated by: 4+8+retaddr+errcode+eip+cs+eflag=17
+	mov		eax, [esi]			;saved eflags
+	push	eax
+	mov		eax, [esi - 4]		;saved cs
+	push	eax
+	mov		eax, [esi - 4 * 2]	;saved eip
+	push	eax
+	mov		eax, [esi - 4 * 3]	;saved err code
+	push	eax
+	push	%1					;vector_no
+	sti
+	call	%2
+	cli
+	add		esp, 4 * 5			;clear arguments of exception handler in stack
+	ret							;returned to 'restart_exception' procedure
+%endmacro
 
-	;add by visual 2016.4.18
-	pushad          ; `.
+divide_error:					; vector_no	= 0
+;	exception_no_errcode	0, exception_handler
+	exception_no_errcode	0, divide_error_handler	;added by xw, 18/12/22
+
+single_step_exception:			; vector_no	= 1
+	exception_no_errcode	1, exception_handler
+
+nmi:							; vector_no	= 2
+	exception_no_errcode	2, exception_handler
+	
+breakpoint_exception:			; vector_no	= 3
+	exception_no_errcode	3, exception_handler
+	
+overflow:						; vector_no	= 4
+	exception_no_errcode	4, exception_handler
+	
+bounds_check:					; vector_no	= 5
+	exception_no_errcode	5, exception_handler
+	
+inval_opcode:					; vector_no	= 6
+	exception_no_errcode	6, exception_handler
+	
+copr_not_available:				; vector_no	= 7
+	exception_no_errcode	7, exception_handler
+	
+double_fault:					; vector_no	= 8
+	exception_errcode	8, exception_handler
+	
+copr_seg_overrun:				; vector_no	= 9
+	exception_no_errcode	9, exception_handler
+	
+inval_tss:						; vector_no	= 10
+	exception_errcode	10, exception_handler
+	
+segment_not_present:			; vector_no	= 11
+	exception_errcode	11, exception_handler
+	
+stack_exception:				; vector_no	= 12
+	exception_errcode	12, exception_handler
+	
+general_protection:				; vector_no	= 13
+	exception_errcode	13, exception_handler
+	
+page_fault:						; vector_no	= 14
+	exception_errcode	14, page_fault_handler
+	
+copr_error:						; vector_no	= 16
+	exception_no_errcode	16, exception_handler
+
+;environment saving when an exception occurs
+;added by xw, 18/12/18
+save_exception:
+    pushad          ; `.
     push    ds      ;  |
     push    es      ;  | 保存原寄存器值
     push    fs      ;  |
@@ -374,40 +522,24 @@ page_fault:
 	mov		fs, dx							;value of fs and gs in user process is different to that in kernel
 	mov		dx, SELECTOR_VIDEO - 2			;added by xw, 18/6/20
 	mov		gs, dx
-	
-	mov 	eax,[esp + RETADR - P_STACKBASE]; 把压入的错误码放进eax
-	mov 	ebx,[esp + EIPREG - P_STACKBASE]; 把压入的eip放进ebx
-	mov 	ecx,[esp + CSREG  - P_STACKBASE]; 把压入的cs放进ecx
-	mov 	edx,[esp + EFLAGSREG  - P_STACKBASE]; 把压入的eflags放进edx	
-	
-	;inc     dword [k_reenter]        ;k_reenter++;   ;k_reenter only counts if irq reenters, xw, 18/4/20
-	;cmp     dword [k_reenter], 0     ;if(k_reenter ==0)
-	;jne     .inkernel                ;(k_reenter !=0)	
-	;mov	esp, StackTop			  ;deleted by xw, 17/12/11		
-	;.inkernel:
-	push edx	;压入eflags
-	push ecx	;压入cs
-	push ebx	;压入eip
-	push eax	;压入错误码
-	push	14		; vector_no	= E
-	;jmp	exception
-	;call	exception_handler edit by visual 2016.4.19
-	call page_fault_handler
-	
-	add esp, 20	;clear 5 arguments in stack, added by xw, 17/12/11	
-	;jmp restart
-	jmp restart_restore	;modified by xw, 17/12/11
-	
-copr_error:
-	push	0xFFFFFFFF	; no err code
-	push	16		; vector_no	= 10h
-	jmp	exception
 
-exception:
-	call	exception_handler  
-	add	esp, 4*2	; 让栈顶指向 EIP，堆栈中从顶向下依次是：EIP、CS、EFLAGS
-	hlt
+    mov     esi, esp                     
+	push    restart_exception
+	jmp     [esi + RETADR - P_STACKBASE]	;the err code is in higher address than retaddr in stack, so there is
+											;no need to modify the position jumped to, that is, 
+											;"jmp [esi + RETADR - 4 - P_STACKBASE]" is actually wrong.
 
+;added by xw, 18/12/18
+restart_exception:
+	call	sched
+	pop		gs
+	pop		fs
+	pop		es
+	pop		ds
+	popad
+	add		esp, 4 * 2	;clear retaddr and error code in stack
+	iretd
+	
 ; ====================================================================================
 ;                                   save
 ; ====================================================================================

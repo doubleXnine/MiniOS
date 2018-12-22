@@ -79,6 +79,91 @@ void initial()
 //	*/
 
 /*======================================================================*
+                         Exception Handling Test
+added by xw, 18/12/19
+ *======================================================================*/
+//	/*
+void TestA()
+{
+	int i, j;
+	while (1)
+	{
+		disp_str("A ");
+
+		i = 100;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+		
+		//generates an Undefined opcode(#UD) exception, without error code
+		//UD2 is provided by Intel to explicitly generate an invalid opcode exception.
+//		asm volatile ("ud2");
+		
+		//generates a General Protection(#GP) exception, with error code
+		//the privilege level of a procedure must be 0 to execute the HLT instruction
+//		asm volatile ("hlt");
+		
+		//generates a Divide Error(#DE) exception, without error code
+		//calculate a / b
+		int a, b;
+		a = 10, b = 0;
+		asm volatile ("mov %0, %%eax\n\t"
+					  "div %1\n\t"
+					  : 
+					  : "r"(a), "r"(b)
+					  : "eax");
+	
+	}
+}
+
+void TestB()
+{
+	int i, j;
+	while (1)
+	{
+		disp_str("B ");
+
+		i = 100;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+	}
+}
+
+void TestC()
+{
+	int i, j;
+	while (1)
+	{
+		disp_str("C ");
+
+		i = 100;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+	}
+}
+
+void initial()
+ {
+	int i, j;
+	while (1)
+	{
+		disp_str("I ");
+
+		i = 100;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+	}
+ }
+//	*/
+
+/*======================================================================*
                         Ordinary System Call Test
 added by xw, 18/4/27
  *======================================================================*/
@@ -280,7 +365,7 @@ void initial()
 added by xw, 18/4/27
  *======================================================================*/
 /* You should also enable the feature you want to test in init.c */
-//	/*
+	/*
 void TestA()
 {
 	int i, j;

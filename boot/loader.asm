@@ -928,7 +928,7 @@ SetupPaging:
 	loop	.1k
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 
-	; 再初始化所有页表（最开始处，一一映射的）
+	; 再初始化所有页表（最开始处，一一映射的）	ps: this part is written by Forrest Yu
 	pop	eax			; 页表个数
 	push eax 		;暂存页表个数
 	mov	ebx, 1024		; 每个页表 1024 个 PTE

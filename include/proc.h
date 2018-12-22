@@ -52,7 +52,13 @@
 #define	NR_FILES	64		//numbers of files a process can own. added by xw, 18/6/14
 
 //enum proc_stat	{IDLE,READY,WAITING,RUNNING};		//add by visual smile 2016.4.5
-enum proc_stat	{IDLE,READY,SLEEPING};		  //eliminate RUNNING state
+//enum proc_stat	{IDLE,READY,SLEEPING};		//eliminate RUNNING state
+enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	/* add KILLED state. when a process's state is KILLED, the process
+												 * won't be scheduled anymore, but all of the resources owned by
+												 * it is not freed yet.
+												 * added by xw, 18/12/19
+												 */
+
 #define NR_CHILD_MAX (NR_PCBS-NR_K_PCBS-1)    //定义最多子进程/线程数量	//add by visual 2016.5.26
 #define TYPE_PROCESS	0//进程//add by visual 2016.5.26
 #define TYPE_THREAD		1//线程//add by visual 2016.5.26

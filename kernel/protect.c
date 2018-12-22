@@ -290,7 +290,13 @@ PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int efl
 		disp_color_str("Error code:", text_color);
 		disp_int(err_code);
 	}
+	
+	//added by xw, 18/12/19
+	disp_str("\n");
 
+	//added by xw, 18/12/19
+	p_proc_current->task.stat = KILLED;
+	
 	//deleted by xw, 18/6/14
 	/*
 	if(vec_no==14)	//edit by visual 2016.4.18			
@@ -299,4 +305,38 @@ PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int efl
 	}
 	*/
 }
+
+/*======================================================================*
+							divide error handler
+ *======================================================================*/
+//used for testing if a exception handler can be interrupted rightly, so it's
+//not a real divide_error handler now. added by xw, 18/12/22
+PUBLIC void divide_error_handler()
+{
+	int vec_no, err_code, eip, cs, eflags;
+	int i, j;
+	
+	asm volatile (	"mov 8(%%ebp), %0\n\t"	//get vec_no from stack
+					"mov 12(%%ebp), %1\n\t"	//get err_code from stack
+					"mov 16(%%ebp), %2\n\t"	//get eip from stack
+					"mov 20(%%ebp), %3\n\t"	//get cs from stack
+					"mov 24(%%ebp), %4\n\t"	//get eflags from stack
+					: "=r"(vec_no), "=r"(err_code), "=r"(eip), 
+					  "=r"(cs), "=r"(eflags)
+				 );
+	exception_handler(vec_no, err_code, eip, cs, eflags);
+	
+	while (1)
+	{
+		disp_str("Loop in divide error handler...\n");
+
+		i = 100;
+		while(--i){
+			j = 1000;
+			while(--j){}
+		}
+	}
+}
+
+	
 
