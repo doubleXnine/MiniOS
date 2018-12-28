@@ -65,7 +65,7 @@ DEV_READ	include/type.h	/^	DEV_READ,$/;"	e	enum:msgtype
 DEV_SCSI	include/fs_const.h	47;"	d
 DEV_WRITE	include/type.h	/^	DEV_WRITE,$/;"	e	enum:msgtype
 DIOCTL_GET_GEO	include/fs_const.h	34;"	d
-DIR_ENTRY_SIZE	include/fs_misc.h	116;"	d
+DIR_ENTRY_SIZE	include/fs_misc.h	109;"	d
 DRV_OF_DEV	kernel/hd.c	50;"	d	file:
 DSREG	include/proc.h	23;"	d
 DataLinBase	include/const.h	83;"	d
@@ -137,7 +137,7 @@ HD_TIMEOUT	include/hd.h	255;"	d
 HZ	include/const.h	52;"	d
 HeapLinBase	include/const.h	89;"	d
 HeapLinLimitMAX	include/const.h	90;"	d
-IDLE	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	e	enum:proc_stat
+IDLE	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	\/* add KILLED state. when a process's state is KILLED, the process$/;"	e	enum:proc_stat
 IDT_SIZE	include/const.h	28;"	d
 INDEX_DUMMY	include/protect.h	68;"	d
 INDEX_FLAT_C	include/protect.h	69;"	d
@@ -183,6 +183,7 @@ I_TYPE_MASK	include/fs_const.h	95;"	d
 InitKernel	boot/loader.asm	/^InitKernel:	; 遍历每一个 Program Header，根据 Program Header 中的信息来确定把什么放进内存，放到什么位置，以及放多少。$/;"	l
 KERNELESPREG	include/proc.h	27;"	d
 KEYBOARD_IRQ	include/const.h	57;"	d
+KILLED	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	\/* add KILLED state. when a process's state is KILLED, the process$/;"	e	enum:proc_stat
 KWALL	include/memman.h	12;"	d
 K_LIN2PHY	include/const.h	76;"	d
 K_PHY2LIN	include/const.h	75;"	d
@@ -242,10 +243,10 @@ MAJOR_SHIFT	include/fs_const.h	49;"	d
 MAKE_DEV	include/fs_const.h	50;"	d
 MAKE_DEVICE_REG	include/hd.h	261;"	d
 MAX_DRIVES	include/fs_const.h	58;"	d
-MAX_FILENAME_LEN	include/fs_misc.h	99;"	d
+MAX_FILENAME_LEN	include/fs.h	19;"	d
 MAX_FILENAME_LEN	include/stdio.h	22;"	d
 MAX_INT	include/const.h	13;"	d
-MAX_PATH	include/fs.h	12;"	d
+MAX_PATH	include/fs.h	18;"	d
 MAX_PATH	include/stdio.h	23;"	d
 MAX_PRIM	include/fs_const.h	70;"	d
 MAX_SUBPARTITIONS	include/fs_const.h	72;"	d
@@ -275,7 +276,7 @@ MessageLength	boot/loader.asm	/^MessageLength		equ	9$/;"	d
 NAME_LEN	include/fs_const.h	18;"	d
 NO_DEV	include/fs_const.h	42;"	d
 NO_PART	include/fs_const.h	85;"	d
-NR_CHILD_MAX	include/proc.h	56;"	d
+NR_CHILD_MAX	include/proc.h	62;"	d
 NR_CONSOLES	include/fs_const.h	8;"	d
 NR_CPUS	include/proc.h	51;"	d
 NR_DEFAULT_FILE_SECTS	include/fs_const.h	105;"	d
@@ -302,9 +303,9 @@ ORANGESBOOT	Makefile	/^ORANGESBOOT	= boot\/boot.bin boot\/loader.bin$/;"	m
 ORANGESINIT	Makefile	/^ORANGESINIT	= init\/init.bin$/;"	m
 ORANGESKERNEL	Makefile	/^ORANGESKERNEL	= kernel.bin$/;"	m
 ORANGES_PART	include/fs_const.h	84;"	d
-O_CREAT	include/fs.h	13;"	d
+O_CREAT	include/fs.h	12;"	d
 O_CREAT	include/stdio.h	24;"	d
-O_RDWR	include/fs.h	14;"	d
+O_RDWR	include/fs.h	13;"	d
 O_RDWR	include/stdio.h	25;"	d
 PARTITION_ENTRY	include/hd.h	/^} PARTITION_ENTRY;$/;"	v	typeref:struct:part_ent
 PARTITION_TABLE_OFFSET	include/hd.h	256;"	d
@@ -331,10 +332,10 @@ P_STACKBASE	include/proc.h	19;"	d
 P_STACKTOP	include/proc.h	38;"	d
 PageTblNumAddr	include/const.h	71;"	d
 RATE_GENERATOR	include/const.h	48;"	d
-RD_SECT	include/fs_misc.h	133;"	d
-RD_SECT_SCHED	include/fs_misc.h	147;"	d
+RD_SECT	include/fs_misc.h	126;"	d
+RD_SECT_SCHED	include/fs_misc.h	140;"	d
 READ	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
-READY	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	e	enum:proc_stat
+READY	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	\/* add KILLED state. when a process's state is KILLED, the process$/;"	e	enum:proc_stat
 REG_ALT_STATUS	include/hd.h	220;"	d
 REG_CMD	include/hd.h	176;"	d
 REG_DATA	include/hd.h	108;"	d
@@ -372,11 +373,11 @@ SECONDARY_IRQ	include/const.h	60;"	d
 SECTOR_BITS	include/fs_const.h	38;"	d
 SECTOR_SIZE	include/fs_const.h	37;"	d
 SECTOR_SIZE_SHIFT	include/fs_const.h	39;"	d
-SEEK_CUR	include/fs.h	16;"	d
+SEEK_CUR	include/fs.h	15;"	d
 SEEK_CUR	include/stdio.h	27;"	d
-SEEK_END	include/fs.h	17;"	d
+SEEK_END	include/fs.h	16;"	d
 SEEK_END	include/stdio.h	28;"	d
-SEEK_SET	include/fs.h	15;"	d
+SEEK_SET	include/fs.h	14;"	d
 SEEK_SET	include/stdio.h	26;"	d
 SELECTOR_DUMMY	include/protect.h	75;"	d
 SELECTOR_FLAT_C	include/protect.h	76;"	d
@@ -387,10 +388,10 @@ SELECTOR_KERNEL_GS	include/protect.h	84;"	d
 SELECTOR_LDT_FIRST	include/protect.h	80;"	d
 SELECTOR_TSS	include/protect.h	79;"	d
 SELECTOR_VIDEO	include/protect.h	78;"	d
-SLEEPING	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	e	enum:proc_stat
+SLEEPING	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	\/* add KILLED state. when a process's state is KILLED, the process$/;"	e	enum:proc_stat
 SSREG	include/proc.h	37;"	d
 STACK_FRAME	include/proc.h	/^}STACK_FRAME;$/;"	t	typeref:struct:s_stackframe
-STACK_SIZE_TASK	include/proc.h	163;"	d
+STACK_SIZE_TASK	include/proc.h	169;"	d
 STAT	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
 STATUS_BSY	include/hd.h	167;"	d
 STATUS_CORR	include/hd.h	172;"	d
@@ -420,8 +421,8 @@ TIMER_MODE	include/const.h	47;"	d
 TREE_INFO	include/proc.h	/^}TREE_INFO;$/;"	t	typeref:struct:s_tree_info
 TRUE	include/const.h	23;"	d
 TSS	include/protect.h	/^}TSS;$/;"	t	typeref:struct:s_tss
-TYPE_PROCESS	include/proc.h	57;"	d
-TYPE_THREAD	include/proc.h	58;"	d
+TYPE_PROCESS	include/proc.h	63;"	d
+TYPE_THREAD	include/proc.h	64;"	d
 TestA	kernel/ktest.c	/^void TestA()$/;"	f
 TestB	kernel/ktest.c	/^void TestB()$/;"	f
 TestC	kernel/ktest.c	/^void TestC()$/;"	f
@@ -435,8 +436,8 @@ VpageLinLimitMAX	include/const.h	86;"	d
 WALL	include/memman.h	13;"	d
 WHENCE	include/fs_const.h	26;"	d
 WRITE	include/type.h	/^	OPEN, CLOSE, READ, WRITE, LSEEK, STAT, UNLINK,$/;"	e	enum:msgtype
-WR_SECT	include/fs_misc.h	139;"	d
-WR_SECT_SCHED	include/fs_misc.h	153;"	d
+WR_SECT	include/fs_misc.h	132;"	d
+WR_SECT_SCHED	include/fs_misc.h	146;"	d
 XT_WINI_IRQ	include/const.h	62;"	d
 _ARDStruct	boot/loader.asm	/^_ARDStruct:			; Address Range Descriptor Structure$/;"	l
 _MemChkBuf	boot/loader.asm	/^_MemChkBuf:	times	256	db	0$/;"	l
@@ -505,8 +506,8 @@ bits	init/initstart.asm	/^bits 32$/;"	l
 bits	kernel/kernel.asm	/^bits 32$/;"	l
 bits	kernel/syscall.asm	/^bits 32$/;"	l
 boot_ind	include/hd.h	/^	u8 boot_ind;		\/**$/;"	m	struct:part_ent
-bounds_check	kernel/kernel.asm	/^bounds_check:$/;"	l
-breakpoint_exception	kernel/kernel.asm	/^breakpoint_exception:$/;"	l
+bounds_check	kernel/kernel.asm	/^bounds_check:					; vector_no	= 5$/;"	l
+breakpoint_exception	kernel/kernel.asm	/^breakpoint_exception:			; vector_no	= 3$/;"	l
 channel	include/proc.h	/^	void* channel;			\/*if non-zero, sleeping on channel, which is a pointer of the target field$/;"	m	struct:s_proc
 child_p_num	include/proc.h	/^	int child_p_num;	\/\/子进程数量$/;"	m	struct:s_tree_info
 child_process	include/proc.h	/^	int child_process[NR_CHILD_MAX];\/\/子进程列表$/;"	m	struct:s_tree_info
@@ -517,9 +518,9 @@ clock_handler	kernel/clock.c	/^PUBLIC void clock_handler(int irq)$/;"	f
 clock_int_msg	kernel/kernel.asm	/^clock_int_msg		db	"^", 0$/;"	d
 close	kernel/syscall.asm	/^close:$/;"	l
 command	include/hd.h	/^	u8	command;$/;"	m	struct:hd_cmd
-copr_error	kernel/kernel.asm	/^copr_error:$/;"	l
-copr_not_available	kernel/kernel.asm	/^copr_not_available:$/;"	l
-copr_seg_overrun	kernel/kernel.asm	/^copr_seg_overrun:$/;"	l
+copr_error	kernel/kernel.asm	/^copr_error:						; vector_no	= 16$/;"	l
+copr_not_available	kernel/kernel.asm	/^copr_not_available:				; vector_no	= 7$/;"	l
+copr_seg_overrun	kernel/kernel.asm	/^copr_seg_overrun:				; vector_no	= 9$/;"	l
 count	include/hd.h	/^	u8	count;$/;"	m	struct:hd_cmd
 cpu_table	kernel/global.c	/^PUBLIC	PROCESS			cpu_table[NR_CPUS];$/;"	v
 cr2_count	kernel/pagetbl.c	/^u32 cr2_count = 0;$/;"	v
@@ -558,13 +559,14 @@ disp_int	lib/klib.c	/^PUBLIC void disp_int(int input)$/;"	f
 disp_pos	command/echo.c	/^int disp_pos;$/;"	v
 disp_pos	include/global.h	/^EXTERN	int		disp_pos;$/;"	v
 disp_str	lib/kliba.asm	/^disp_str:$/;"	l
-divide_error	kernel/kernel.asm	/^divide_error:$/;"	l
+divide_error	kernel/kernel.asm	/^divide_error:					; vector_no	= 0$/;"	l
+divide_error_handler	kernel/protect.c	/^PUBLIC void divide_error_handler()$/;"	f
 do_close	kernel/fs.c	/^PRIVATE int do_close(int fd)$/;"	f
 do_lseek	kernel/fs.c	/^PRIVATE int do_lseek(MESSAGE *fs_msg)$/;"	f
 do_open	kernel/fs.c	/^PRIVATE int do_open(MESSAGE *fs_msg)$/;"	f
 do_rdwt	kernel/fs.c	/^PRIVATE int do_rdwt(MESSAGE *fs_msg)$/;"	f
 do_unlink	kernel/fs.c	/^PRIVATE int do_unlink(MESSAGE *fs_msg)$/;"	f
-double_fault	kernel/kernel.asm	/^double_fault:$/;"	l
+double_fault	kernel/kernel.asm	/^double_fault:					; vector_no	= 8$/;"	l
 driver_nr	include/fs_misc.h	/^	int driver_nr; \/**< The proc nr.\\ of the device driver. *\/$/;"	m	struct:dev_drv_map
 ds	include/proc.h	/^	u32	ds;			\/* ┃						│			*\/$/;"	m	struct:s_stackframe
 ds	include/protect.h	/^	u32	ds;$/;"	m	struct:s_tss
@@ -628,7 +630,6 @@ esp2	include/protect.h	/^	u32	esp2;$/;"	m	struct:s_tss
 esp_save_context	include/proc.h	/^	char* esp_save_context;	\/\/to save the position of esp in the kernel stack of the process$/;"	m	struct:s_proc
 esp_save_int	include/proc.h	/^	char* esp_save_int;		\/\/to save the position of esp in the kernel stack of the process$/;"	m	struct:s_proc
 esp_save_syscall	include/proc.h	/^	char* esp_save_syscall;	\/\/to save the position of esp in the kernel stack of the process$/;"	m	struct:s_proc
-exception	kernel/kernel.asm	/^exception:$/;"	l
 exception_handler	kernel/protect.c	/^PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags)$/;"	f
 exec	kernel/syscall.asm	/^exec:$/;"	l
 exec_elfcpy	kernel/exec.c	/^PRIVATE u32 exec_elfcpy(u32 fd,Elf32_Phdr Echo_Phdr,u32 attribute)  \/\/ 这部分代码将来要移动到exec.c文件中，包括下面exec()中的一部分$/;"	f
@@ -642,6 +643,7 @@ extern	kernel/kernel.asm	/^extern	delay$/;"	l
 extern	kernel/kernel.asm	/^extern	disp_int$/;"	l
 extern	kernel/kernel.asm	/^extern	disp_pos$/;"	l
 extern	kernel/kernel.asm	/^extern	disp_str$/;"	l
+extern	kernel/kernel.asm	/^extern	divide_error_handler	;added by xw, 18\/12\/22$/;"	l
 extern	kernel/kernel.asm	/^extern	exception_handler$/;"	l
 extern	kernel/kernel.asm	/^extern	gdt_ptr$/;"	l
 extern	kernel/kernel.asm	/^extern	idt_ptr$/;"	l
@@ -686,7 +688,7 @@ fs	include/protect.h	/^	u32	fs;$/;"	m	struct:s_tss
 fsbuf	kernel/fs.c	/^PRIVATE u8* fsbuf;$/;"	v
 gdt	include/global.h	/^EXTERN	DESCRIPTOR	gdt[GDT_SIZE];$/;"	v
 gdt_ptr	include/global.h	/^EXTERN	u8		gdt_ptr[6];	\/\/ 0~15:Limit  16~47:Base$/;"	v
-general_protection	kernel/kernel.asm	/^general_protection:$/;"	l
+general_protection	kernel/kernel.asm	/^general_protection:				; vector_no	= 13$/;"	l
 getFreeMemInfo	boot/loader.asm	/^getFreeMemInfo:$/;"	l
 get_arg	kernel/kernel.asm	/^get_arg:$/;"	l
 get_inode	kernel/fs.c	/^PRIVATE struct inode * get_inode(int dev, int num)$/;"	f
@@ -856,8 +858,8 @@ inode_table	kernel/fs.c	/^PRIVATE struct inode inode_table[NR_INODE];$/;"	v	type
 instack	kernel/kernel.asm	/^instack:						;already in the irq-stack$/;"	l
 int_handler	include/type.h	/^typedef	void	(*int_handler)	();$/;"	t
 interrupt_wait	kernel/hd.c	/^PRIVATE void interrupt_wait()$/;"	f
-inval_opcode	kernel/kernel.asm	/^inval_opcode:$/;"	l
-inval_tss	kernel/kernel.asm	/^inval_tss:$/;"	l
+inval_opcode	kernel/kernel.asm	/^inval_opcode:					; vector_no	= 6$/;"	l
+inval_tss	kernel/kernel.asm	/^inval_tss:						; vector_no	= 10$/;"	l
 iobase	include/protect.h	/^	u16	iobase;	\/* I\/O位图基址大于或等于TSS段界限，就表示没有I\/O许可位图 *\/$/;"	m	struct:s_tss
 irq_handler	include/type.h	/^typedef	void	(*irq_handler)	(int irq);$/;"	t
 irq_table	kernel/global.c	/^PUBLIC	irq_handler		irq_table[NR_IRQ];$/;"	v
@@ -946,7 +948,7 @@ name	include/proc.h	/^	char	name[32];$/;"	m	struct:s_task
 new_dir_entry	kernel/fs.c	/^PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)$/;"	f
 new_inode	kernel/fs.c	/^PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)$/;"	f
 next	include/hd.h	/^	struct rdwt_info *next;$/;"	m	struct:rdwt_info	typeref:struct:rdwt_info::rdwt_info
-nmi	kernel/kernel.asm	/^nmi:$/;"	l
+nmi	kernel/kernel.asm	/^nmi:							; vector_no	= 2$/;"	l
 nr_imap_sects	include/fs_misc.h	/^	u32	nr_imap_sects;	  \/**< How many inode-map sectors *\/$/;"	m	struct:super_block
 nr_inode_sects	include/fs_misc.h	/^	u32	nr_inode_sects;   \/**< How many inode sectors *\/$/;"	m	struct:super_block
 nr_inodes	include/fs_misc.h	/^	u32	nr_inodes;	  \/**< How many inodes *\/$/;"	m	struct:super_block
@@ -964,7 +966,7 @@ open_cnt	include/hd.h	/^	int			open_cnt;$/;"	m	struct:hd_info
 org	boot/loader.asm	/^org  0100h$/;"	l
 out_byte	lib/kliba.asm	/^out_byte:$/;"	l
 out_hd_queue	kernel/hd.c	/^PRIVATE int out_hd_queue(HDQueue *hdq, RWInfo **p)$/;"	f
-overflow	kernel/kernel.asm	/^overflow:$/;"	l
+overflow	kernel/kernel.asm	/^overflow:						; vector_no	= 4$/;"	l
 p_align	include/elf.h	/^	u32	p_align;				\/\/该program	对齐方式$/;"	m	struct:__anon3
 p_filesz	include/elf.h	/^	u32	p_filesz;				\/\/该program	在文件中的长度$/;"	m	struct:__anon3
 p_flags	include/elf.h	/^	u32	p_flags;				\/\/该program	读写权限$/;"	m	struct:__anon3
@@ -976,7 +978,7 @@ p_proc_current	include/global.h	/^EXTERN	PROCESS*	p_proc_current;$/;"	v
 p_proc_next	include/global.h	/^EXTERN	PROCESS*	p_proc_next;	\/\/the next process that will run. added by xw, 18\/4\/26$/;"	v
 p_type	include/elf.h	/^	u32	p_type;					\/\/该program 	类型$/;"	m	struct:__anon3
 p_vaddr	include/elf.h	/^	u32	p_vaddr;				\/\/该program	应该放在这个线性地址$/;"	m	struct:__anon3
-page_fault	kernel/kernel.asm	/^page_fault:$/;"	l
+page_fault	kernel/kernel.asm	/^page_fault:						; vector_no	= 14$/;"	l
 page_fault_handler	kernel/pagetbl.c	/^PUBLIC void page_fault_handler(	u32 vec_no,\/\/异常编号，此时应该是14，代表缺页异常$/;"	f
 part_ent	include/hd.h	/^struct part_ent {$/;"	s
 part_info	include/hd.h	/^struct part_info {$/;"	s
@@ -999,8 +1001,8 @@ print_hdinfo	kernel/hd.c	/^PRIVATE void print_hdinfo(struct hd_info * hdi)$/;"	f
 print_identify_info	kernel/hd.c	/^PRIVATE void print_identify_info(u16* hdinfo)$/;"	f
 priority	include/proc.h	/^    int priority;$/;"	m	struct:s_proc
 proc	include/hd.h	/^	PROCESS *proc;$/;"	m	struct:rdwt_info
-proc2pid	include/proc.h	167;"	d
-proc_stat	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING};		  \/\/eliminate RUNNING state$/;"	g
+proc2pid	include/proc.h	173;"	d
+proc_stat	include/proc.h	/^enum proc_stat	{IDLE,READY,SLEEPING,KILLED};	\/* add KILLED state. when a process's state is KILLED, the process$/;"	g
 proc_table	kernel/global.c	/^PUBLIC	PROCESS			proc_table[NR_PCBS];										\/\/edit by visual 2016.4.5	$/;"	v
 pte_exist	kernel/pagetbl.c	/^PUBLIC u32 pte_exist(	u32 PageDirPhyAddr,\/\/页目录物理地址$/;"	f
 pthread	kernel/syscall.asm	/^pthread:$/;"	l
@@ -1036,6 +1038,7 @@ rear	include/hd.h	/^	RWInfo *rear;$/;"	m	struct:__anon1
 refresh_page_cache	kernel/kernel.asm	/^refresh_page_cache:$/;"	l
 regs	include/proc.h	/^	STACK_FRAME regs;          \/* process registers saved in stack frame *\/$/;"	m	struct:s_proc
 renew_env	kernel/kernel.asm	/^renew_env:$/;"	l
+restart_exception	kernel/kernel.asm	/^restart_exception:$/;"	l
 restart_initial	kernel/kernel.asm	/^restart_initial:							;Added by xw, 18\/4\/19$/;"	l
 restart_int	kernel/kernel.asm	/^restart_int:$/;"	l
 restart_restore	kernel/kernel.asm	/^restart_restore:$/;"	l
@@ -1064,6 +1067,7 @@ s_task	include/proc.h	/^typedef struct s_task {$/;"	s
 s_tree_info	include/proc.h	/^typedef struct s_tree_info{\/\/进程树记录，包括父进程，子进程，子线程  \/\/add by visual 2016.5.25$/;"	s
 s_tss	include/protect.h	/^typedef struct s_tss {$/;"	s
 s_type	include/elf.h	/^	u32 s_type;    	\/\/该section 的类型，代码段，数据段，符号表等$/;"	m	struct:__anon4
+save_exception	kernel/kernel.asm	/^save_exception:$/;"	l
 save_int	kernel/kernel.asm	/^save_int:$/;"	l
 save_syscall	kernel/kernel.asm	/^save_syscall:			;can't modify EAX, for it contains syscall number$/;"	l
 sb_dev	include/fs_misc.h	/^	int	sb_dev; 	\/**< the super block's home device *\/$/;"	m	struct:super_block
@@ -1071,9 +1075,9 @@ sched	kernel/kernel.asm	/^sched:$/;"	l
 schedule	kernel/proc.c	/^PUBLIC void schedule()$/;"	f
 search_file	kernel/fs.c	/^PRIVATE int search_file(char * path)$/;"	f
 seg2phys	kernel/protect.c	/^PUBLIC u32 seg2phys(u16 seg)$/;"	f
-segment_not_present	kernel/kernel.asm	/^segment_not_present:$/;"	l
+segment_not_present	kernel/kernel.asm	/^segment_not_present:			; vector_no	= 11$/;"	l
 selector	include/protect.h	/^	u16	selector;	\/* Selector *\/$/;"	m	struct:s_gate
-single_step_exception	kernel/kernel.asm	/^single_step_exception:$/;"	l
+single_step_exception	kernel/kernel.asm	/^single_step_exception:			; vector_no	= 1$/;"	l
 size	include/global.h	/^	u32	size;$/;"	m	struct:memfree
 size	include/hd.h	/^	u32	size;	\/* how many sectors in this partition *\/$/;"	m	struct:part_info
 size	include/memman.h	/^	u32 addr,size;$/;"	m	struct:FREEINFO
@@ -1087,7 +1091,7 @@ ss1	include/protect.h	/^	u32	ss1;$/;"	m	struct:s_tss
 ss2	include/protect.h	/^	u32	ss2;$/;"	m	struct:s_tss
 stack	include/proc.h	/^	char stack[INIT_STACK_SIZE\/sizeof(char)];$/;"	m	union:task_union
 stack_child_limit	include/proc.h	/^	u32 stack_child_limit;					\/\/分给子线程的栈的界限		\/\/add by visual 2016.5.27$/;"	m	struct:s_lin_memmap
-stack_exception	kernel/kernel.asm	/^stack_exception:$/;"	l
+stack_exception	kernel/kernel.asm	/^stack_exception:				; vector_no	= 12$/;"	l
 stack_lin_base	include/proc.h	/^	u32 stack_lin_base;						\/\/栈基址$/;"	m	struct:s_lin_memmap
 stack_lin_limit	include/proc.h	/^	u32 stack_lin_limit;					\/\/栈界限（使用时注意栈的生长方向）$/;"	m	struct:s_lin_memmap
 stacksize	include/proc.h	/^	int	stacksize;$/;"	m	struct:s_task

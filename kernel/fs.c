@@ -23,9 +23,14 @@
 //MESSAGE	fs_msg;		//deleted by xw, 18/8/27
 //PROCESS* pcaller;		//deleted by xw, 18/8/27
 
+/* fsbuf is a global memory area, could cause data race when multiple processes access 
+ * disk by using read()/write() concurrently. so delete it and use local variables instead.
+ * added by xw, 18/12/27
+ */
+//PRIVATE u8* fsbuf;
+
 //added by xw, 18/8/28
 /* data */
-PRIVATE u8* fsbuf;
 PRIVATE struct inode* root_inode;
 PRIVATE struct file_desc f_desc_table[NR_FILE_DESC];
 PRIVATE struct inode inode_table[NR_INODE];
@@ -74,7 +79,7 @@ PUBLIC void init_fs()
 	disp_str("Initializing file system...  ");
 	
 	//allocate fs buffer. added by xw, 18/6/15
-	fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE));
+	//fsbuf = (u8*)K_PHY2LIN(sys_kmalloc(FSBUF_SIZE)); //deleted by xw, 18/12/27
 
 	int i;
 	for (i = 0; i < NR_FILE_DESC; i++)
@@ -121,6 +126,9 @@ PRIVATE void mkfs()
 
 	int bits_per_sect = SECTOR_SIZE * 8; /* 8 bits per byte */
 
+	//local array, to substitute global fsbuf. added by xw, 18/12/27
+	char fsbuf[SECTOR_SIZE];
+
 	/* get the geometry of ROOTDEV */
 	struct part_info geo;
 	driver_msg.type		= DEV_IOCTL;
@@ -163,7 +171,7 @@ PRIVATE void mkfs()
 	memcpy(fsbuf, &sb, SUPER_BLOCK_SIZE);
 
 	/* write the super block */
-	WR_SECT(ROOT_DEV, 1);
+	WR_SECT(ROOT_DEV, 1, fsbuf);	//added by xw, 18/12/27
 
 	// printl("devbase:0x%x00, sb:0x%x00, imap:0x%x00, smap:0x%x00\n"
 	//        "        inodes:0x%x00, 1st_sector:0x%x00\n", 
@@ -201,7 +209,8 @@ PRIVATE void mkfs()
 		fsbuf[0] |= 1 << i;
 
 	
-	WR_SECT(ROOT_DEV, 2);
+	//WR_SECT(ROOT_DEV, 2);
+	WR_SECT(ROOT_DEV, 2, fsbuf);	//modified by xw, 18/12/27
 
 	/************************/
 	/*      secter map      */
@@ -218,12 +227,12 @@ PRIVATE void mkfs()
 	for (j = 0; j < nr_sects % 8; j++)
 		fsbuf[i] |= (1 << j);
 
-	WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects);
+	WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects, fsbuf);	//modified by xw, 18/12/27
 
 	/* zeromemory the rest sector-map */
 	memset(fsbuf, 0, SECTOR_SIZE);
 	for (i = 1; i < sb.nr_smap_sects; i++)
-		WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects + i);
+		WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects + i, fsbuf);	//modified by xw, 18/12/27
 
 	/************************/
 	/*       inodes         */
@@ -246,7 +255,7 @@ PRIVATE void mkfs()
 		pi->i_start_sect = MAKE_DEV(DEV_CHAR_TTY, i);
 		pi->i_nr_sects = 0;
 	}
-	WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects + sb.nr_smap_sects);
+	WR_SECT(ROOT_DEV, 2 + sb.nr_imap_sects + sb.nr_smap_sects, fsbuf);	//modified by xw, 18/12/27
 
 	/************************/
 	/*          `/'         */
@@ -275,7 +284,7 @@ PRIVATE void mkfs()
 				break;
 		}
 	}
-	WR_SECT(ROOT_DEV, sb.n_1st_sect);
+	WR_SECT(ROOT_DEV, sb.n_1st_sect, fsbuf);	//modified by xw, 18/12/27
 }
 
 /*****************************************************************************
@@ -658,8 +667,9 @@ PRIVATE int search_file(char * path)
 					       */
 	int m = 0;
 	struct dir_entry * pde;
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/27
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
 			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
@@ -743,6 +753,7 @@ PRIVATE void read_super_block(int dev)
 {
 	int i;
 	MESSAGE driver_msg;
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 
 	driver_msg.type		= DEV_READ;
 	driver_msg.DEVICE	= MINOR(dev);
@@ -853,7 +864,8 @@ PRIVATE struct inode * get_inode(int dev, int num)
 
 	struct super_block * sb = get_super_block(dev);
 	int blk_nr = 1 + 1 + sb->nr_imap_sects + sb->nr_smap_sects + ((num - 1) / (SECTOR_SIZE / INODE_SIZE));
-	RD_SECT(dev, blk_nr);
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
+	RD_SECT(dev, blk_nr, fsbuf);	//added by xw, 18/12/27
 	struct inode * pinode =
 		(struct inode*)((u8*)fsbuf +
 				((num - 1 ) % (SECTOR_SIZE / INODE_SIZE))
@@ -896,7 +908,8 @@ PRIVATE struct inode * get_inode_sched(int dev, int num)
 
 	struct super_block * sb = get_super_block(dev);
 	int blk_nr = 1 + 1 + sb->nr_imap_sects + sb->nr_smap_sects + ((num - 1) / (SECTOR_SIZE / INODE_SIZE));
-	RD_SECT_SCHED(dev, blk_nr);
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
+	RD_SECT_SCHED(dev, blk_nr, fsbuf);	//added by xw, 18/12/27
 	struct inode * pinode =
 		(struct inode*)((u8*)fsbuf +
 				((num - 1 ) % (SECTOR_SIZE / INODE_SIZE))
@@ -938,7 +951,8 @@ PRIVATE void sync_inode(struct inode * p)
 	struct inode * pinode;
 	struct super_block * sb = get_super_block(p->i_dev);
 	int blk_nr = 1 + 1 + sb->nr_imap_sects + sb->nr_smap_sects + ((p->i_num - 1) / (SECTOR_SIZE / INODE_SIZE));
-	RD_SECT_SCHED(p->i_dev, blk_nr);		//modified by xw, 18/8/28
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
+	RD_SECT_SCHED(p->i_dev, blk_nr, fsbuf);		//modified by xw, 18/12/27
 	pinode = (struct inode*)((u8*)fsbuf +
 				 (((p->i_num - 1) % (SECTOR_SIZE / INODE_SIZE))
 				  * INODE_SIZE));
@@ -946,7 +960,7 @@ PRIVATE void sync_inode(struct inode * p)
 	pinode->i_size = p->i_size;
 	pinode->i_start_sect = p->i_start_sect;
 	pinode->i_nr_sects = p->i_nr_sects;
-	WR_SECT_SCHED(p->i_dev, blk_nr);		//modified by xw, 18/8/28
+	WR_SECT_SCHED(p->i_dev, blk_nr, fsbuf);		//modified by xw, 18/12/27
 }
 
 /// added by zcr (from ch9/e/fs/open.c)
@@ -1008,8 +1022,9 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 	struct dir_entry * new_de = 0;
 
 	int i, j;
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 
 		pde = (struct dir_entry *)fsbuf;
 		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
@@ -1033,7 +1048,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 	strcpy(new_de->name, filename);
 
 	/* write dir block -- ROOT dir block */
-	WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);		//modified by xw, 18/8/28
+	WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i, fsbuf);		//modified by xw, 18/12/27
 
 	/* update dir inode */
 	sync_inode(dir_inode);
@@ -1068,9 +1083,10 @@ PRIVATE int alloc_imap_bit(int dev)
 	// disp_int(sb->nr_imap_sects);
 	// disp_str("  ");
 
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 	for (i = 0; i < sb->nr_imap_sects; i++) {
 		// RD_SECT(dev, imap_blk0_nr + i);		/// zcr: place the result in fsbuf?
-		RD_SECT_SCHED(dev, imap_blk0_nr + i);	//modified by xw, 18/8/28
+		RD_SECT_SCHED(dev, imap_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 		/// zcr debug(output is 0x2, right.)
 		// disp_str("imap_blk0_nr + i: ");
 		// disp_int(imap_blk0_nr + i);
@@ -1086,7 +1102,8 @@ PRIVATE int alloc_imap_bit(int dev)
 
 		for (j = 0; j < SECTOR_SIZE; j++) {
 			/* skip `11111111' bytes */
-			if (fsbuf[j] == 0xFF)
+			//if (fsbuf[j] == 0xFF)
+			if (fsbuf[j] == '\xFF')		//modified by xw, 18/12/28
 				continue;
 
 			/* skip `1' bits */
@@ -1105,7 +1122,7 @@ PRIVATE int alloc_imap_bit(int dev)
 			fsbuf[j] |= (1 << k);
 
 			/* write the bit to imap */
-			WR_SECT_SCHED(dev, imap_blk0_nr + i);	//modified by xw, 18/8/28
+			WR_SECT_SCHED(dev, imap_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 			break;
 		}
 
@@ -1141,17 +1158,19 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 
 	int smap_blk0_nr = 1 + 1 + sb->nr_imap_sects;
 	int free_sect_nr = 0;
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 
 	for (i = 0; i < sb->nr_smap_sects; i++) { /* smap_blk0_nr + i :
 						     current sect nr. */
-		RD_SECT_SCHED(dev, smap_blk0_nr + i);	//modified by xw, 18/8/28
+		RD_SECT_SCHED(dev, smap_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 
 		/* byte offset in current sect */
 		for (j = 0; j < SECTOR_SIZE && nr_sects_to_alloc > 0; j++) {
 			k = 0;
 			if (!free_sect_nr) {
 				/* loop until a free bit is found */
-				if (fsbuf[j] == 0xFF) continue;
+				//if (fsbuf[j] == 0xFF) continue;
+				if (fsbuf[j] == '\xFF') continue;	//modified by xw, 18/12/28
 				for (; ((fsbuf[j] >> k) & 1) != 0; k++) {}
 				free_sect_nr = (i * SECTOR_SIZE + j) * 8 +
 					k - 1 + sb->n_1st_sect;
@@ -1166,7 +1185,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 		}
 
 		if (free_sect_nr) /* free bit found, write the bits to smap */
-			WR_SECT_SCHED(dev, smap_blk0_nr + i);	//modified by xw, 18/8/28
+			WR_SECT_SCHED(dev, smap_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 
 		if (nr_sects_to_alloc == 0)
 			break;
@@ -1237,12 +1256,12 @@ PRIVATE int real_read(int fd, void *buf, int count)
 {
 	//added by xw, 18/8/27
 	MESSAGE fs_msg;
-	PROCESS *p_proc_current;
 	
 	fs_msg.type = READ;
 	fs_msg.FD   = fd;
 	fs_msg.BUF  = buf;
 	fs_msg.CNT  = count;
+	fs_msg.source = proc2pid(p_proc_current);	//added by xw, 18/12/22
 
 	// send_recv(BOTH, TASK_FS, &msg);
 	do_rdwt(&fs_msg);
@@ -1274,6 +1293,7 @@ PRIVATE int real_write(int fd, const void *buf, int count)
 	fs_msg.FD   = fd;
 	fs_msg.BUF  = (void*)buf;
 	fs_msg.CNT  = count;
+	fs_msg.source = proc2pid(p_proc_current);	//added by xw, 18/12/22
 
 	// send_recv(BOTH, TASK_FS, &msg);
 	/// zcr added
@@ -1348,12 +1368,16 @@ PRIVATE int do_rdwt(MESSAGE *fs_msg)
 		int rw_sect_min = pin->i_start_sect + (pos>>SECTOR_SIZE_SHIFT);
 		int rw_sect_max = pin->i_start_sect + (pos_end>>SECTOR_SIZE_SHIFT);
 
+		//modified by xw, 18/12/27
+		//int chunk = min(rw_sect_max - rw_sect_min + 1,
+		//		FSBUF_SIZE >> SECTOR_SIZE_SHIFT);
 		int chunk = min(rw_sect_max - rw_sect_min + 1,
-				FSBUF_SIZE >> SECTOR_SIZE_SHIFT);
+				SECTOR_SIZE >> SECTOR_SIZE_SHIFT);
 
 		int bytes_rw = 0;
 		int bytes_left = len;
 		int i;
+		char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
 		for (i = rw_sect_min; i <= rw_sect_max; i += chunk) {
 			/* read/write this amount of bytes every time */
 			int bytes = min(bytes_left, chunk * SECTOR_SIZE - off);
@@ -1419,9 +1443,9 @@ PRIVATE int real_unlink(const char * pathname)
 	MESSAGE fs_msg;
 	
 	fs_msg.type   = UNLINK;
-
 	fs_msg.PATHNAME	= (void*)pathname;
 	fs_msg.NAME_LEN	= strlen(pathname);
+	fs_msg.source = proc2pid(p_proc_current);	//added by xw, 18/12/22
 
 	// send_recv(BOTH, TASK_FS, &msg);
 
@@ -1506,10 +1530,11 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 	int bit_idx = inode_nr % 8;
 	// assert(byte_idx < SECTOR_SIZE);	/* we have only one i-map sector */
 	/* read sector 2 (skip bootsect and superblk): */
-	RD_SECT_SCHED(pin->i_dev, 2);		//modified by xw, 18/8/28
+	char fsbuf[SECTOR_SIZE];	//local array, to substitute global fsbuf. added by xw, 18/12/27
+	RD_SECT_SCHED(pin->i_dev, 2, fsbuf);		//modified by xw, 18/12/27
 	// assert(fsbuf[byte_idx % SECTOR_SIZE] & (1 << bit_idx));
 	fsbuf[byte_idx % SECTOR_SIZE] &= ~(1 << bit_idx);
-	WR_SECT_SCHED(pin->i_dev, 2);	//modified by xw, 18/8/28
+	WR_SECT_SCHED(pin->i_dev, 2, fsbuf);	//modified by xw, 18/12/27
 
 	/**************************/
 	/* free the bits in s-map */
@@ -1535,7 +1560,7 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 	int s = 2  /* 2: bootsect + superblk */
 		+ sb->nr_imap_sects + byte_idx / SECTOR_SIZE;
 
-	RD_SECT_SCHED(pin->i_dev, s);		//modified by xw, 18/8/28
+	RD_SECT_SCHED(pin->i_dev, s, fsbuf);		//modified by xw, 18/12/27
 
 	int i;
 	/* clear the first byte */
@@ -1550,8 +1575,8 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 	for (k = 0; k < byte_cnt; k++,i++,bits_left-=8) {
 		if (i == SECTOR_SIZE) {
 			i = 0;
-			WR_SECT_SCHED(pin->i_dev, s);		//modified by xw, 18/8/28
-			RD_SECT_SCHED(pin->i_dev, ++s);		//modified by xw, 18/8/28
+			WR_SECT_SCHED(pin->i_dev, s, fsbuf);		//modified by xw, 18/12/27
+			RD_SECT_SCHED(pin->i_dev, ++s, fsbuf);		//modified by xw, 18/12/27
 		}
 		// assert(fsbuf[i] == 0xFF);
 		fsbuf[i] = 0;
@@ -1560,13 +1585,13 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 	/* clear the last byte */
 	if (i == SECTOR_SIZE) {
 		i = 0;
-		WR_SECT_SCHED(pin->i_dev, s);			//modified by xw, 18/8/28
-		RD_SECT_SCHED(pin->i_dev, ++s);			//modified by xw, 18/8/28
+		WR_SECT_SCHED(pin->i_dev, s, fsbuf);			//modified by xw, 18/12/27
+		RD_SECT_SCHED(pin->i_dev, ++s, fsbuf);			//modified by xw, 18/12/27
 	}
 	unsigned char mask = ~((unsigned char)(~0) << bits_left);
 	// assert((fsbuf[i] & mask) == mask);
 	fsbuf[i] &= (~0) << bits_left;
-	WR_SECT_SCHED(pin->i_dev, s);				//modified by xw, 18/8/28
+	WR_SECT_SCHED(pin->i_dev, s, fsbuf);				//modified by xw, 18/12/27
 
 	/***************************/
 	/* clear the i-node itself */
@@ -1596,7 +1621,7 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 	int dir_size = 0;
 
 	for (i = 0; i < nr_dir_blks; i++) {
-		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
+		RD_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 
 		pde = (struct dir_entry *)fsbuf;
 		int j;
@@ -1607,7 +1632,7 @@ PRIVATE int do_unlink(MESSAGE *fs_msg)
 			if (pde->inode_nr == inode_nr) {
 				/* pde->inode_nr = 0; */
 				memset(pde, 0, DIR_ENTRY_SIZE);
-				WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i);	//modified by xw, 18/8/28
+				WR_SECT_SCHED(dir_inode->i_dev, dir_blk0_nr + i, fsbuf);	//modified by xw, 18/12/27
 				flg = 1;
 				break;
 			}

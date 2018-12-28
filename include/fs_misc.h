@@ -123,13 +123,15 @@ struct file_desc {
  * Since all invocations of `rw_sector()' in FS look similar (most of the
  * params are the same), we use this macro to make code more readable.
  */
-#define RD_SECT(dev,sect_nr) rw_sector(DEV_READ, \
+//#define RD_SECT(dev,sect_nr) rw_sector(DEV_READ,	//modified by xw, 18/12/27 
+#define RD_SECT(dev,sect_nr,fsbuf) rw_sector(DEV_READ, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* read one sector */ \
 				       proc2pid(p_proc_current),/*TASK_A*/			\
 				       fsbuf);
-#define WR_SECT(dev,sect_nr) rw_sector(DEV_WRITE, \
+//#define WR_SECT(dev,sect_nr) rw_sector(DEV_WRITE, //modified by xw, 18/12/27
+#define WR_SECT(dev,sect_nr,fsbuf) rw_sector(DEV_WRITE, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* write one sector */ \
@@ -137,13 +139,15 @@ struct file_desc {
 				       fsbuf);
 
 //added by xw, 18/8/27
-#define RD_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_READ, \
+//#define RD_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_READ, //modified by xw, 18/12/27
+#define RD_SECT_SCHED(dev,sect_nr,fsbuf) rw_sector_sched(DEV_READ, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* read one sector */ \
 				       proc2pid(p_proc_current),/*TASK_A*/			\
 				       fsbuf);
-#define WR_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_WRITE, \
+//#define WR_SECT_SCHED(dev,sect_nr) rw_sector_sched(DEV_WRITE, //modified by xw, 18/12/27
+#define WR_SECT_SCHED(dev,sect_nr,fsbuf) rw_sector_sched(DEV_WRITE, \
 				       dev,				\
 				       (sect_nr) * SECTOR_SIZE,		\
 				       SECTOR_SIZE, /* write one sector */ \

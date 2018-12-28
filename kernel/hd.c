@@ -261,6 +261,7 @@ PUBLIC void hd_rdwt_sched(MESSAGE *p)
 	
 	if (p->type == DEV_READ) {
 		in_hd_queue(&hdque, &rwinfo);
+		p_proc_current->task.channel = &hdque;
 		p_proc_current->task.stat = SLEEPING;
 		sched();
 		phys_copy(p->BUF, buffer, p->CNT);

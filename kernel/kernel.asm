@@ -627,10 +627,11 @@ save_syscall:			;can't modify EAX, for it contains syscall number
 sched:
 ;could be called by C function, you must save ebp, ebx, edi, esi, 
 ;for C function assumes that they stay unchanged. added by xw, 18/4/19
-		cli
+
 ;save_context
 		pushfd
 		pushad			;modified by xw, 18/6/4
+		cli
 ;		push	ebp
 ;		push    ebx      
 ;		push    edi     
@@ -650,9 +651,9 @@ sched:
 ;		pop		edi
 ;		pop		ebx
 ;		pop		ebp
+;		sti			;popfd will be executed below, so sti is not needed. modified by xw, 18/12/27
 		popad
 		popfd
-		sti
 		ret
 ; ====================================================================================
 ;                        			renew_env

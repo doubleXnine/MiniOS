@@ -82,7 +82,7 @@ void initial()
                          Exception Handling Test
 added by xw, 18/12/19
  *======================================================================*/
-//	/*
+	/*
 void TestA()
 {
 	int i, j;
@@ -410,10 +410,10 @@ void initial()
                           File System Test
 added by xw, 18/5/26
  *======================================================================*/
-	/*
+//	/*
 void TestA()
 {	
-//	while (1) {}
+	//while (1) {}
 	
 	int fd;
 	int i, n;
@@ -447,7 +447,7 @@ void TestA()
 
 void TestB()
 {	
-//	while (1) {}
+	//while (1) {}
 	
 	int fd, n;
 	const int rd_bytes = 4;
@@ -524,7 +524,7 @@ void TestC()
 
 void initial()
 {
-//	while (1) {}
+	//while (1) {}
 	
 	int i, fd;
 	char* filenames[] = {"/foo", "/bar", "/baz"};
@@ -567,6 +567,8 @@ void initial()
 /*======================================================================*
                           File System Test 2
 to test interrupt_wait_sched() used in hd.c
+interrupt_wait_sched() is not used currently, because it can only support
+one process to access hd disk, as you can see below.
 added by xw, 18/8/16
  *======================================================================*/
 	/*
