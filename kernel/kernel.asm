@@ -175,7 +175,7 @@ csinit:		; “这个跳转指令强制使用刚刚初始化的结构”——<<O
 ; ---------------------------------
 %macro	hwint_master	1
 	;call save
-	call save_int			;modified by xw, 17/12/11
+	call save_int			;save registers and some other things. modified by xw, 17/12/11
 	inc  dword [k_reenter]  ;If k_reenter isn't equal to 0, there is no switching to the irq-stack, 
 							;which is performed in save_int. Added by xw, 18/4/21
 	
@@ -246,7 +246,7 @@ hwint07:		; Interrupt routine for irq 7 (printer)
 ;~xw
 
 	;added by xw, 18/5/29
-	call save_int			
+	call save_int			;save registers and some other things. 
 	inc  dword [k_reenter]  ;If k_reenter isn't equal to 0, there is no switching to the irq-stack, 
 							;which is performed in save_int. Added by xw, 18/4/21
 	
@@ -418,7 +418,7 @@ hwint15:		; Interrupt routine for irq 15
 ;added by xw, 18/12/18
 %macro	exception_no_errcode	2
 	push	0xFFFFFFFF			;no err code
-	call	save_exception
+	call	save_exception		;save registers and some other things. 
 	mov		esi, esp			;esp points to pushed address of restart_exception at present
 	add		esi, 4 * 17			;we use esi to help to fetch arguments of exception handler from the stack.
 								;17 is calculated by: 4+8+retaddr+errcode+eip+cs+eflag=17
@@ -439,7 +439,7 @@ hwint15:		; Interrupt routine for irq 15
 %endmacro
 
 %macro	exception_errcode	2
-	call	save_exception
+	call	save_exception		;save registers and some other things.
 	mov		esi, esp			;esp points to pushed address of restart_exception at present
 	add		esi, 4 * 17			;we use esi to help to fetch arguments of exception handler from the stack.
 								;17 is calculated by: 4+8+retaddr+errcode+eip+cs+eflag=17
@@ -693,7 +693,7 @@ sys_call:
 ;get syscall number from eax
 ;syscall that's called gets its argument from pushed ebx
 ;so we can't modify eax and ebx in save_syscall
-	call	save_syscall	;modified by xw, 17/12/11
+	call	save_syscall	;save registers and some other things. modified by xw, 17/12/11
 	sti
 	push 	ebx							;push the argument the syscall need
 	call    [sys_call_table + eax * 4]	;将参数压入堆栈后再调用函数			add by visual 2016.4.6
@@ -751,7 +751,9 @@ restart_restore:
 ;	mov		dword [tss + TSS3_S_SP0], eax
 ;	mov 	esp, [esp + ESP_SAVE_INT]		;restore esp position
 ;	jmp 	restart_restore
-restart_initial:							;Added by xw, 18/4/19
+
+;to launch the first process in the os. added by xw, 18/4/19
+restart_initial:
 ;	mov		eax, [p_proc_current]
 ;	lldt	[eax + P_LDT_SEL]
 ;	lea		ebx, [eax + INIT_STACK_SIZE]

@@ -112,8 +112,8 @@ void TestA()
 					  "div %1\n\t"
 					  : 
 					  : "r"(a), "r"(b)
-					  : "eax");
-	
+					  : "eax");		
+		
 	}
 }
 
@@ -365,7 +365,7 @@ void initial()
 added by xw, 18/4/27
  *======================================================================*/
 /* You should also enable the feature you want to test in init.c */
-	/*
+//	/*
 void TestA()
 {
 	int i, j;
@@ -410,11 +410,14 @@ void initial()
                           File System Test
 added by xw, 18/5/26
  *======================================================================*/
-//	/*
+	/*
 void TestA()
 {	
 	//while (1) {}
 	
+	//manipulate /blah
+	//if /blah exists, open
+	//if /blah doesn't exist, open+write+close
 	int fd;
 	int i, n;
 	char filename[MAX_FILENAME_LEN+1] = "blah";
@@ -449,6 +452,7 @@ void TestB()
 {	
 	//while (1) {}
 	
+	//manipulate /blah, open+lseek+read+close
 	int fd, n;
 	const int rd_bytes = 4;
 	char bufr[5];
@@ -488,6 +492,7 @@ void TestC()
 {
 	//while (1) {}
 	
+	//manipulate /blah, open+lseek+read+close
 	int fd, n;
 	const int rd_bytes = 3;
 	char bufr[4];
@@ -530,6 +535,7 @@ void initial()
 	char* filenames[] = {"/foo", "/bar", "/baz"};
 	char* rfilenames[] = {"/bar", "/foo", "/baz", "/dev_tty0"};
 	
+	//open+close
 	for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
 		disp_str("(Initial)");
 		fd = open(filenames[i], O_CREAT | O_RDWR);
@@ -544,6 +550,7 @@ void initial()
 		}
 	}
 
+	//unlink
 	for (i = 0; i < sizeof(rfilenames) / sizeof(rfilenames[0]); i++) {
 		disp_str("(Initial)");
 		if (unlink(rfilenames[i]) == 0) {

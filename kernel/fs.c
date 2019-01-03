@@ -426,8 +426,11 @@ PRIVATE int do_open(MESSAGE *fs_msg)
 
 	/* find a free slot in f_desc_table[] */
 	for (i = 0; i < NR_FILE_DESC; i++)
-		if (f_desc_table[i].fd_inode == 0)
+		if (f_desc_table[i].fd_inode == 0) {
+			f_desc_table[i].fd_inode = -1;	//to decrease the chance of two process finding the same free slot
+											//a lock should be used here in the future. added by xw, 18/12/28 
 			break;
+		}
 	if (i >= NR_FILE_DESC) {
 		// panic("f_desc_table[] is full (PID:%d)", proc2pid(p_proc_current));
 		disp_str("f_desc_table[] is full (PID:");
